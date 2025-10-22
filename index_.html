@@ -177,7 +177,13 @@
     intro.className = 'container';
     intro.innerHTML = `
       <h2>실험 1: 요소 배치 과제</h2>
-      <p>2장의 이미지를 각각 한 번씩 보게 됩니다. 각 이미지마다 창, 문, 그리고 필요하면 파티션을 <strong> 1개씩</strong> 배치하세요:</p>
+      <p>2장의 이미지를 각각 한 번씩 보게 됩니다(순서는 무작위). 각 이미지마다 다음을 <strong>각 1개씩</strong> 배치하세요:</p>
+      <ul>
+        <li>창: 길이 200px, 폭 10px 선분</li>
+        <li>문: 지름 100px 원</li>
+        <li>파티션: 길이 100px, 폭 10px 선분 <span class="small">(파티션은 설치하지 않아도 됩니다.)</span></li>
+      </ul>
+      <p class="small">버튼으로 배치 항목을 선택 → 이미지에서 클릭하여 배치 → 항목을 클릭하면 <strong>선택</strong>됨. 선택 상태에서 <strong>드래그 이동</strong> 가능, <strong>회전 90°</strong> 및 <strong>삭제</strong> 버튼 사용 가능. <strong>창과 문</strong>을 배치하면 "다음 이미지" 버튼이 활성화됩니다.</p>
       <div style="margin-top:1rem;"><button id="f1_start" class="btn">시작</button></div>`;
     root.appendChild(intro);
 
@@ -329,9 +335,33 @@
       const rows = EXP_ROWS.filter(r=>r.phase==='placement');
 
       sum.innerHTML = `
-        <h2>실험 1 이 끝났습니다.</h2>
+        <h2>실험 1 요약</h2>
+        <p class="small">썸네일 PNG만 저장하시면 됩니다. (원본 이미지는 표시하지 않습니다)</p>
+        <p class="small" style="margin-top:.25rem; color:#9ad0ff;">※ 브라우저 보안 정책상 GitHub 저장소(디렉터리)에는 직접 저장할 수 없습니다. 아래 링크를 눌러 <strong>로컬로 저장</strong>한 뒤 이메일로 전송해 주세요.</p>
+        <ul id="thumb-links"></ul>
+        <div class="toolbar" style="margin-top:.75rem;">
+          <button id="dl_all_thumbs" class="btn">썸네일 PNG 일괄 저장(브라우저에서 자동 다중 저장이 차단될 수 있습니다)</button>
           <button id="go_exp2" class="btn">실험 2로 계속</button>
         </div>`;
+      document.body.appendChild(sum);
+
+      // 썸네일 생성 (DOM에 캔버스는 표시하지 않고, 다운로드 링크만 표시)
+      const ul = sum.querySelector('#thumb-links');
+      window.__FIRST_THUMBS__ = [];
+      const uniqueImages = Array.from(new Set(rows.map(r=>r.image)));
+      uniqueImages.forEach((imgSrc, i)=>{
+        const itemRows = rows.filter(r=>r.image===imgSrc);
+        const placed = { window: null, partition: null, door: null };
+        itemRows.forEach(r=>{ placed[r.item] = { rx:r.rel_x, ry:r.rel_y, angle:r.angle||'0', px_w:r.px_w, px_h:r.px_h }; });
+        const c=document.createElement('canvas'); c.width=240; c.height=160; drawThumbToCanvas(imgSrc, placed, c);
+        const href = c.toDataURL('image/png'); const pid = PARTICIPANT.id || 'anon'; const name = `${pid}_exp1_thumb_${i+1}.png`;
+        window.__FIRST_THUMBS__.push({ name, href });
+        const li = document.createElement('li'); li.innerHTML = `<a class="btn" href="${href}" download="${name}">${name} 저장</a>`; ul.appendChild(li);
+      });
+
+      document.getElementById('dl_all_thumbs').addEventListener('click', ()=>{
+        (window.__FIRST_THUMBS__||[]).forEach(t=>{ const a=document.createElement('a'); a.href=t.href; a.download=t.name; document.body.appendChild(a); a.click(); a.remove(); });
+      });
 
       document.getElementById('go_exp2').addEventListener('click', ()=>{ sum.remove(); runSecondExperiment(props); });
     }
@@ -407,7 +437,8 @@
         page2.innerHTML = `
           <h2>모든 실험이 끝났습니다</h2>
           <p>아래 버튼을 눌러 결과 파일(CSV)을 저장해 주세요.</p>
-          <p><a id="m_dl" class="btn" download="vp_experiment.csv">데이터(CSV) 저장</a></p>         
+          <p><a id="m_dl" class="btn" download="vp_experiment.csv">데이터(CSV) 저장</a></p>
+          <div class="small" style="margin-top:.5rem;">※ 실험 1에서 생성한 썸네일 PNG 3장도 함께 저장해 두었다가 메일 전송 시 같이 보내 주세요.</div>
           <div style="margin-top:1rem;"><button id="m_next2" class="btn">전송 안내</button></div>`;
         document.body.appendChild(page2);
         document.getElementById('m_dl').href = url;
