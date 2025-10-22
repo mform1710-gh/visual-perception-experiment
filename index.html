@@ -336,11 +336,6 @@
 
       sum.innerHTML = `
         <h2>실험 1 요약</h2>
-        <p class="small">썸네일 PNG만 저장하시면 됩니다. (원본 이미지는 표시하지 않습니다)</p>
-        <p class="small" style="margin-top:.25rem; color:#9ad0ff;">※ 브라우저 보안 정책상 GitHub 저장소(디렉터리)에는 직접 저장할 수 없습니다. 아래 링크를 눌러 <strong>로컬로 저장</strong>한 뒤 이메일로 전송해 주세요.</p>
-        <ul id="thumb-links"></ul>
-        <div class="toolbar" style="margin-top:.75rem;">
-          <button id="dl_all_thumbs" class="btn">썸네일 PNG 일괄 저장(브라우저에서 자동 다중 저장이 차단될 수 있습니다)</button>
           <button id="go_exp2" class="btn">실험 2로 계속</button>
         </div>`;
       document.body.appendChild(sum);
@@ -437,8 +432,7 @@
         page2.innerHTML = `
           <h2>모든 실험이 끝났습니다</h2>
           <p>아래 버튼을 눌러 결과 파일(CSV)을 저장해 주세요.</p>
-          <p><a id="m_dl" class="btn" download="vp_experiment.csv">데이터(CSV) 저장</a></p>
-          <div class="small" style="margin-top:.5rem;">※ 실험 1에서 생성한 썸네일 PNG 3장도 함께 저장해 두었다가 메일 전송 시 같이 보내 주세요.</div>
+          <p><a id="m_dl" class="btn" download="vp_experiment.csv">데이터(CSV) 저장</a></p>         
           <div style="margin-top:1rem;"><button id="m_next2" class="btn">전송 안내</button></div>`;
         document.body.appendChild(page2);
         document.getElementById('m_dl').href = url;
