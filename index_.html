@@ -329,28 +329,9 @@
       const rows = EXP_ROWS.filter(r=>r.phase==='placement');
 
       sum.innerHTML = `
-        <h2>실험 1 요약</h2>
+        <h2>실험 1 이 끝났습니다.</h2>
           <button id="go_exp2" class="btn">실험 2로 계속</button>
         </div>`;
-      document.body.appendChild(sum);
-
-      // 썸네일 생성 (DOM에 캔버스는 표시하지 않고, 다운로드 링크만 표시)
-      const ul = sum.querySelector('#thumb-links');
-      window.__FIRST_THUMBS__ = [];
-      const uniqueImages = Array.from(new Set(rows.map(r=>r.image)));
-      uniqueImages.forEach((imgSrc, i)=>{
-        const itemRows = rows.filter(r=>r.image===imgSrc);
-        const placed = { window: null, partition: null, door: null };
-        itemRows.forEach(r=>{ placed[r.item] = { rx:r.rel_x, ry:r.rel_y, angle:r.angle||'0', px_w:r.px_w, px_h:r.px_h }; });
-        const c=document.createElement('canvas'); c.width=240; c.height=160; drawThumbToCanvas(imgSrc, placed, c);
-        const href = c.toDataURL('image/png'); const pid = PARTICIPANT.id || 'anon'; const name = `${pid}_exp1_thumb_${i+1}.png`;
-        window.__FIRST_THUMBS__.push({ name, href });
-        const li = document.createElement('li'); li.innerHTML = `<a class="btn" href="${href}" download="${name}">${name} 저장</a>`; ul.appendChild(li);
-      });
-
-      document.getElementById('dl_all_thumbs').addEventListener('click', ()=>{
-        (window.__FIRST_THUMBS__||[]).forEach(t=>{ const a=document.createElement('a'); a.href=t.href; a.download=t.name; document.body.appendChild(a); a.click(); a.remove(); });
-      });
 
       document.getElementById('go_exp2').addEventListener('click', ()=>{ sum.remove(); runSecondExperiment(props); });
     }
