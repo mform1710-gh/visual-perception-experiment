@@ -60,7 +60,7 @@
     window.addEventListener('unhandledrejection', (e)=>{ console.error('[unhandledrejection]', e.reason); show((e.reason && (e.reason.message||e.reason)) || 'Unhandled promise rejection'); });
   })();
 
-  // 참가자 ID(썸네일 파일명에 포함)
+  // 참가자 ID(썸네일/오버레이 파일명에 포함)
   const PARTICIPANT = { id:'' };
   function setParticipantId(id){ PARTICIPANT.id = (id||'').trim(); }
 
@@ -81,7 +81,7 @@
 
   // 공용 데이터 버스
   const EXP_ROWS = [];
-  const FIRST_STIM = ['img/10.JPG','img/11.JPG'];
+  const FIRST_STIM = ['img/10.JPG','img/11.JPG']; // 실험1 고정 순서
 
   // ========================= 부팅 전 자가 점검 (이미지 경로) =========================
   async function selfCheck(){
@@ -141,7 +141,7 @@
       <div style="margin-top:1rem;">
         <button id="m_next" class="btn">다음 (제출)</button>
       </div>`;
-    root.appendChild(page1);
+    document.body.appendChild(page1);
 
     document.getElementById('m_next').addEventListener('click', async ()=>{
       const pid = document.getElementById('m_id').value.trim();
@@ -177,7 +177,7 @@
     intro.className = 'container';
     intro.innerHTML = `
       <h2>실험 1: 요소 배치 과제</h2>
-      <p>2장의 이미지를 각각 한 번씩 보게 됩니다(순서는 무작위). 각 이미지마다 다음을 <strong>각 1개씩</strong> 배치하세요:</p>
+      <p>2장의 이미지를 각각 한 번씩 보게 됩니다(항상 10 → 11 순서). 각 이미지마다 다음을 <strong>각 1개씩</strong> 배치하세요:</p>
       <ul>
         <li>창: 길이 200px, 폭 10px 선분</li>
         <li>문: 지름 100px 원</li>
@@ -189,10 +189,10 @@
 
     document.getElementById('f1_start').addEventListener('click', ()=>{ intro.remove(); startSequence(); });
 
-    const order = shuffle(FIRST_STIM);
+    const order = FIRST_STIM.slice(); // 고정 순서
     let idx = 0;
 
-    function startSequence(){ if (idx >= order.length) return finishFirst(); showPlacementPage(order[idx++]); }
+    function startSequence(){ if (idx >= order.length) return finishFirst(props); showPlacementPage(order[idx++]); }
 
     function showPlacementPage(imgSrc){
       const page = document.createElement('div');
@@ -314,57 +314,64 @@
         startSequence();
       });
     }
+  }
 
-    function drawThumbToCanvas(src, placed, canvas){
-      const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height);
-      const im=new Image();
-      im.onload=()=>{
-        const scale=Math.min(canvas.width/im.width, canvas.height/im.height);
-        const w=im.width*scale, h=im.height*scale; const ox=(canvas.width-w)/2, oy=(canvas.height-h)/2;
-        ctx.drawImage(im, ox, oy, w, h);
-        function drawRect(it, color){ if(!it) return; const cx=ox + (it.rx*w); const cy=oy + (it.ry*h); const rw=(it.px_w||100)*scale; const rh=(it.px_h||10)*scale; ctx.save(); ctx.translate(cx, cy); if((it.angle||'0')==='90'){ ctx.rotate(Math.PI/2); } ctx.fillStyle=color; ctx.globalAlpha=0.8; ctx.fillRect(-rw/2, -rh/2, rw, rh); ctx.restore(); }
-        function drawDoor(it){ if(!it) return; const cx=ox + (it.rx*w); const cy=oy + (it.ry*h); const r=((it.px_w||100)/2)*scale; ctx.save(); ctx.globalAlpha=0.5; ctx.strokeStyle='#ff9'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke(); ctx.restore(); }
-        drawRect(placed.window, '#6cf'); drawRect(placed.partition, '#ccc'); drawDoor(placed.door);
-      };
-      im.src = src + '?cb=' + Date.now();
-    }
-
-    function finishFirst(){
-      const sum = document.createElement('div');
-      sum.className = 'container';
-      const rows = EXP_ROWS.filter(r=>r.phase==='placement');
-
-      sum.innerHTML = `
-        <h2>실험 1 요약</h2>
-        <p class="small">썸네일 PNG만 저장하시면 됩니다. (원본 이미지는 표시하지 않습니다)</p>
-        <p class="small" style="margin-top:.25rem; color:#9ad0ff;">※ 브라우저 보안 정책상 GitHub 저장소(디렉터리)에는 직접 저장할 수 없습니다. 아래 링크를 눌러 <strong>로컬로 저장</strong>한 뒤 이메일로 전송해 주세요.</p>
-        <ul id="thumb-links"></ul>
-        <div class="toolbar" style="margin-top:.75rem;">
-          <button id="dl_all_thumbs" class="btn">썸네일 PNG 일괄 저장(브라우저에서 자동 다중 저장이 차단될 수 있습니다)</button>
-          <button id="go_exp2" class="btn">실험 2로 계속</button>
-        </div>`;
-      document.body.appendChild(sum);
-
-      // 썸네일 생성 (DOM에 캔버스는 표시하지 않고, 다운로드 링크만 표시)
-      const ul = sum.querySelector('#thumb-links');
+  // ---- 오버레이 PNG 생성기 (실험1 결과를 원본 위에 합성) ----
+  function generateOverlayPNGs(rows){
+    // await을 전혀 사용하지 않는 Promise 체인 방식 (호환성↑)
+    try{
       window.__FIRST_THUMBS__ = [];
       const uniqueImages = Array.from(new Set(rows.map(r=>r.image)));
-      uniqueImages.forEach((imgSrc, i)=>{
+      const c = document.createElement('canvas'); c.width=600; c.height=400; const ctx=c.getContext('2d');
+
+      function drawOne(i){
+        if (i >= uniqueImages.length) return Promise.resolve();
+        const imgSrc = uniqueImages[i];
         const itemRows = rows.filter(r=>r.image===imgSrc);
         const placed = { window: null, partition: null, door: null };
         itemRows.forEach(r=>{ placed[r.item] = { rx:r.rel_x, ry:r.rel_y, angle:r.angle||'0', px_w:r.px_w, px_h:r.px_h }; });
-        const c=document.createElement('canvas'); c.width=240; c.height=160; drawThumbToCanvas(imgSrc, placed, c);
-        const href = c.toDataURL('image/png'); const pid = PARTICIPANT.id || 'anon'; const name = `${pid}_exp1_thumb_${i+1}.png`;
-        window.__FIRST_THUMBS__.push({ name, href });
-        const li = document.createElement('li'); li.innerHTML = `<a class="btn" href="${href}" download="${name}">${name} 저장</a>`; ul.appendChild(li);
-      });
 
-      document.getElementById('dl_all_thumbs').addEventListener('click', ()=>{
-        (window.__FIRST_THUMBS__||[]).forEach(t=>{ const a=document.createElement('a'); a.href=t.href; a.download=t.name; document.body.appendChild(a); a.click(); a.remove(); });
-      });
+        return new Promise(function(loadRes){
+          const im = new Image();
+          im.onload = function(){
+            ctx.clearRect(0,0,c.width,c.height);
+            if (im.width && im.height){
+              const scale=Math.min(c.width/im.width, c.height/im.height);
+              const w=im.width*scale, h=im.height*scale; const ox=(c.width-w)/2, oy=(c.height-h)/2;
+              ctx.drawImage(im, ox, oy, w, h);
+              function drawRect(it, color){ if(!it) return; const cx=ox + (it.rx*w); const cy=oy + (it.ry*h); const rw=(it.px_w||100)*scale; const rh=(it.px_h||10)*scale; ctx.save(); ctx.translate(cx, cy); if((it.angle||'0')==='90'){ ctx.rotate(Math.PI/2); } ctx.fillStyle=color; ctx.globalAlpha=0.8; ctx.fillRect(-rw/2, -rh/2, rw, rh); ctx.restore(); }
+              function drawDoor(it){ if(!it) return; const cx=ox + (it.rx*w); const cy=oy + (it.ry*h); const r=((it.px_w||100)/2)*scale; ctx.save(); ctx.globalAlpha=0.5; ctx.strokeStyle='#ff9'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke(); ctx.restore(); }
+              drawRect(placed.window, '#6cf'); drawRect(placed.partition, '#ccc'); drawDoor(placed.door);
+            }
+            loadRes();
+          };
+          im.onerror = function(){ loadRes(); };
+          im.src = imgSrc + '?cb=' + Date.now();
+        }).then(function(){
+          return new Promise(function(res){
+            c.toBlob(function(blob){
+              const href = URL.createObjectURL(blob||new Blob());
+              const pid = PARTICIPANT.id || 'anon'; const name = `${pid}_exp1_overlay_${i+1}.png`;
+              window.__FIRST_THUMBS__.push({ name, href });
+              res();
+            }, 'image/png');
+          });
+        }).then(function(){
+          return drawOne(i+1);
+        });
+      }
 
-      document.getElementById('go_exp2').addEventListener('click', ()=>{ sum.remove(); runSecondExperiment(props); });
-    }
+      // 시작
+      drawOne(0);
+    }catch(err){ console.error('generateOverlayPNGs error', err); }
+  }
+
+  // ========================= 실험1 종료 → 바로 실험2로 =========================
+  function finishFirst(props){
+    // 오버레이 PNG는 비동기로 생성 (await 사용하지 않음 → 실험2 바로 시작)
+    const rows = EXP_ROWS.filter(r=>r.phase==='placement');
+    generateOverlayPNGs(rows); // fire-and-forget
+    runSecondExperiment(props);
   }
 
   // ========================= 두번째 실험: 27 시행(자극 3초 + 휴식 3초) =========================
@@ -438,7 +445,6 @@
           <h2>모든 실험이 끝났습니다</h2>
           <p>아래 버튼을 눌러 결과 파일(CSV)을 저장해 주세요.</p>
           <p><a id="m_dl" class="btn" download="vp_experiment.csv">데이터(CSV) 저장</a></p>
-          <div class="small" style="margin-top:.5rem;">※ 실험 1에서 생성한 썸네일 PNG 3장도 함께 저장해 두었다가 메일 전송 시 같이 보내 주세요.</div>
           <div style="margin-top:1rem;"><button id="m_next2" class="btn">전송 안내</button></div>`;
         document.body.appendChild(page2);
         document.getElementById('m_dl').href = url;
@@ -450,7 +456,6 @@
             <p>다음 파일들을 아래 이메일로 보내주세요:</p>
             <ul>
               <li><a href="${url}" download="vp_experiment.csv"><code>vp_experiment.csv</code></a> (실험 1+2 전체 데이터)</li>
-              <li>실험 1 썸네일 PNG 2장 (아래 링크에서 다시 다운로드 가능)</li>
             </ul>
             <ul>${thumbs}</ul>
             <p style="font-size:1.1rem;">📧 <strong>mform1710@gmail.com</strong></p>
@@ -471,13 +476,13 @@
       if (params.get('selftest') !== '1') return;
       const out = [];
       function ok(name, cond){ out.push((cond? '✅':'❌') + ' ' + name); return !!cond; }
-      // 테스트 1: 블록 생성 길이
+      // 테스트 1: makeBlocks 길이
       ok('makeBlocks length=3', makeBlocks([1,2,3], 3).length === 3);
       // 테스트 2: 회전 width/height 교환
       const el = document.createElement('div'); el.style.position='absolute'; el.style.width='300px'; el.style.height='10px'; document.body.appendChild(el);
       const w1 = el.offsetWidth, h1 = el.offsetHeight; el.style.width=h1+'px'; el.style.height=w1+'px';
       ok('rotate swaps size', el.offsetWidth===h1 && el.offsetHeight===w1);
-      // 테스트 3: 썸네일 캔버스 그리기 (픽셀 변경 여부)
+      // 테스트 3: 캔버스 픽셀 변경 여부
       const cv=document.createElement('canvas'); cv.width=120; cv.height=80; const ctx=cv.getContext('2d'); const before=cv.toDataURL(); ctx.fillStyle='#fff'; ctx.fillRect(0,0,10,10); const after=cv.toDataURL(); ok('canvas draws', before!==after);
       // 출력
       const box=document.createElement('div'); box.className='container'; box.innerHTML='<h3>Self Test</h3><pre style="background:#0b0b0b; padding:.75rem; border:1px solid #222; border-radius:.5rem;">'+out.join('\n')+'</pre>'; document.body.appendChild(box);
