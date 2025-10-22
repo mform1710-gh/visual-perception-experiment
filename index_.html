@@ -177,8 +177,13 @@
     intro.className = 'container';
     intro.innerHTML = `
       <h2>실험 1: 요소 배치 과제</h2>
-      <p>2장의 이미지를 각각 한 번씩 보게 됩니다. 각 이미지마다 창, 문, 그리고 파티션을 배치하세요:</p>
-
+      <p>2장의 이미지를 각각 한 번씩 보게 됩니다(항상 10 → 11 순서). 각 이미지마다 다음을 <strong>각 1개씩</strong> 배치하세요:</p>
+      <ul>
+        <li>창: 길이 200px, 폭 10px 선분</li>
+        <li>문: 지름 100px 원</li>
+        <li>파티션: 길이 100px, 폭 10px 선분 <span class="small">(파티션은 설치하지 않아도 됩니다.)</span></li>
+      </ul>
+      <p class="small">버튼으로 배치 항목을 선택 → 이미지에서 클릭하여 배치 → 항목을 클릭하면 <strong>선택</strong>됨. 선택 상태에서 <strong>드래그 이동</strong> 가능, <strong>회전 90°</strong> 및 <strong>삭제</strong> 버튼 사용 가능. <strong>창과 문</strong>을 배치하면 "다음 이미지" 버튼이 활성화됩니다.</p>
       <div style="margin-top:1rem;"><button id="f1_start" class="btn">시작</button></div>`;
     root.appendChild(intro);
 
@@ -379,7 +384,7 @@
     info.className = 'container';
     info.innerHTML = `
       <h2>실험 2 안내</h2>
-      <p>앞의 실험에서 본 것과 유사한 이미지를 모두 27회 보게 됩니다. 이미지가 제시되는 동안 벽으로 둘러 싸인 공간을 분할하고, 그 개수를 1~3 중 하나를 눌러 응답하세요.</p>
+      <p>앞의 실험에서 본 것과 유사한 이미지를 모두 27회 보게 됩니다. 이미지가 제시되는 동안 벽으로 둘러 싸인  공간을 분할하고, 그 개수를 1~3 중 하나를 눌러 응답하세요.</p>
       <div style="margin-top:1rem;"><button id="exp2_go" class="btn">시작</button></div>`;
     root.appendChild(info);
 
@@ -433,7 +438,7 @@
 
       function end(){
         screen.remove();
-        // ---- CSV: 모든 행의 키를 합집합으로 수집해 응답(response)까지 누락 없이 저장 ----
+        // ---- CSV: 모든 행의 키를 합집합으로 수집해 응답(response)까지 누락 없이 저장 (실험2만) ----
         const rows = EXP_ROWS.filter(r => r.phase === 'stim');
         const keySet = new Set(); rows.forEach(r=>Object.keys(r).forEach(k=>keySet.add(k)));
         const preferred = ['participant_id','age','sex','vision','handedness','phase','block','order_in_block','stim_name','image','item','rel_x','rel_y','angle','px_left','px_top','px_w','px_h','response','rt'];
@@ -454,6 +459,8 @@
           <ul id="overlay-list"></ul>
           <p style="font-size:1.1rem;">📧 <strong>mform1710@gmail.com</strong></p>
           <p style="margin-top:1rem;">참여해주셔서 감사합니다.</p>`;
+        document.body.appendChild(page3);
+
         const listEl = page3.querySelector('#overlay-list');
         const hintEl = page3.querySelector('#overlay-hint');
         function addItem(name, href){
@@ -464,9 +471,6 @@
         }
         (window.__FIRST_THUMBS__||[]).forEach(t=> addItem(t.name, t.href));
         window.addEventListener('overlay-ready', (e)=>{ const d = e.detail||{}; if (d.name && d.href) addItem(d.name, d.href); });
-          <p style="font-size:1.1rem;">📧 <strong>mform1710@gmail.com</strong></p>
-          <p style="margin-top:1rem;">참여해주셔서 감사합니다.</p>`;
-        document.body.appendChild(page3);
       }
     });
   }
