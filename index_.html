@@ -4,141 +4,623 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>시지각 실험 (온라인)</title>
-  <script src="https://unpkg.com/jspsych@7.3.3/dist/jspsych.js"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.1.2"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.3"></script>
-  <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" />
+
+  <!-- jsPsych core CSS (표시 전용) -->
+  <link rel="stylesheet" href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" crossorigin="anonymous" />
+
   <style>
-    body { background:#110; color:#fff; }
+    :root { color-scheme: dark; }
+    body { background:#000; color:#fff; }
+    #jspsych-target, .jspsych-content { display:flex; align-items:center; justify-content:center; min-height:100vh; }
     .center-wrap { display:flex; align-items:center; justify-content:center; height:100vh; }
     .fixation { font-size:64px; line-height:1; font-weight:600; }
-    #jspsych-target, .jspsych-content { display:flex; align-items:center; justify-content:center; min-height:100vh; }
     .btn { padding:.8rem 1.2rem; border:1px solid #666; border-radius:.6rem; background:#111; color:#fff; cursor:pointer; }
+    .btn[disabled] { opacity:.5; cursor:not-allowed; }
     .btn:hover { background:#1d1d1d; }
     .small { font-size:.9rem; color:#aaa; }
-    .container { max-width:800px; margin:0 auto; padding:2rem; }
+    .container { max-width:860px; margin:0 auto; padding:2rem; }
+    ol { padding-left:1.2rem; }
+    code { background:#111; padding:.1rem .3rem; border-radius:.3rem; }
+    .warn { color:#ffca6b; }
+    .ok { color:#9aff9a; }
+    .err { color:#ff8080; }
+    .log { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:.9rem; background:#0b0b0b; border:1px solid #222; padding:.75rem; border-radius:.5rem; white-space:pre-wrap; }
+    .row { display:flex; gap:.5rem; flex-wrap:wrap; }
+    .fullscreen { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:#000; }
+    .stim-img { max-width:90vw; max-height:85vh; object-fit:contain; }
   </style>
+  <script>
+    // 전역 에러 로거: 어떤 에러든 부팅 패널에 찍히도록
+    (function attachGlobalErrorLogger(){
+      const queue = [];
+      function safeLog(prefix, msg){
+        const el = document.getElementById('boot-status');
+        const stamp = new Date().toLocaleTimeString();
+        const line = `\n[${stamp}] ${prefix}: ${msg}`;
+        if (el) { el.innerHTML += line; }
+        else { queue.push(line); }
+      }
+      window.addEventListener('error', function (e){
+        const src = e && e.filename ? ` @ ${e.filename}:${e.lineno || ''}` : '';
+        const detail = e && e.error && e.error.stack ? ('\n' + e.error.stack) : '';
+        safeLog('window.onerror', (e && e.message ? e.message : 'Unknown') + src + detail);
+      });
+      window.addEventListener('unhandledrejection', function (e){
+        const reason = e && e.reason ? (e.reason.stack || e.reason) : 'Unknown promise rejection';
+        safeLog('unhandledrejection', String(reason));
+      });
+      document.addEventListener('DOMContentLoaded', function(){
+        if (queue.length){
+          const el = document.getElementById('boot-status');
+          if (el) el.innerHTML += queue.join('');
+        }
+      });
+    })();
+  </script>
 </head>
 <body>
-  <div id="jspsych-target"></div>
+  <noscript>
+    <div class="container">
+      <h2 class="warn">JavaScript 비활성화</h2>
+      <p>이 페이지는 JavaScript가 필요합니다. 브라우저 설정에서 활성화 후 새로고침하세요.</p>
+    </div>
+  </noscript>
+
+  <!-- ✅ 부팅/디버그 패널: 외부 스크립트가 전혀 없어도 텍스트가 보이도록 순수 HTML로 구성 -->
+  <div id="boot" class="container">
+    <h1>시지각 실험 – 부팅/디버그 패널</h1>
+    <div id="boot-status" class="log">[0] 페이지 로드 대기…</div>
+    <div class="row" style="margin-top:1rem;">
+      <button id="btn-load" class="btn" type="button">① jsPsych 로드</button>
+      <button id="btn-check" class="btn" type="button" disabled>② 라이브러리 점검</button>
+      <button id="btn-imgcheck" class="btn" type="button">③ 이미지 경로 점검</button>
+      <button id="btn-smoke" class="btn" type="button" disabled>④ 스모크 테스트</button>
+      <button id="btn-start" class="btn" type="button" disabled>⑤ 실험 시작 (jsPsych)</button>
+      <button id="btn-min" class="btn" type="button">대안: 미니멀 모드(무CDN)</button>
+      <button id="btn-env" class="btn" type="button">환경 정보</button>
+    </div>
+    <p class="small" style="margin-top:.75rem;">강력 새로고침(Ctrl/Cmd+Shift+R) 또는 URL에 <code>?v=2</code>를 붙여 캐시 우회 가능.</p>
+  </div>
+
+  <!-- jsPsych가 마운트될 영역 (초기에는 숨김) -->
+  <div id="jspsych-target" style="display:none;"></div>
 
   <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const IMAGE_DISPLAY_MS = 1000;
-    const REST_DISPLAY_MS  = 3000;
-    const REPEATS          = 3;
+  // ========================= Robust dynamic loader =========================
+  const CDN = {
+    core: [
+      // 1) Local vendor 먼저 시도 (CDN이 막힌 환경 대응)
+      'vendor/jspsych/dist/jspsych.js',
+      // 2) Public CDNs
+      'https://unpkg.com/jspsych@7.3.3/dist/jspsych.js',
+      'https://cdn.jsdelivr.net/npm/jspsych@7.3.3/dist/jspsych.js'
+    ],
+    plugins: [
+      [
+        'vendor/jspsych/plugins/plugin-preload.js',
+        'https://unpkg.com/@jspsych/plugin-preload@1.1.3',
+        'https://cdn.jsdelivr.net/npm/@jspsych/plugin-preload@1.1.3'
+      ],
+      [
+        'vendor/jspsych/plugins/plugin-fullscreen.js',
+        'https://unpkg.com/@jspsych/plugin-fullscreen@1.1.3',
+        'https://cdn.jsdelivr.net/npm/@jspsych/plugin-fullscreen@1.1.3'
+      ],
+      [
+        'vendor/jspsych/plugins/plugin-html-keyboard-response.js',
+        'https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3',
+        'https://cdn.jsdelivr.net/npm/@jspsych/plugin-html-keyboard-response@1.1.3'
+      ],
+      [
+        'vendor/jspsych/plugins/plugin-html-button-response.js',
+        'https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3',
+        'https://cdn.jsdelivr.net/npm/@jspsych/plugin-html-button-response@1.1.3'
+      ],
+      [
+        'vendor/jspsych/plugins/plugin-image-keyboard-response.js',
+        'https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.3',
+        'https://cdn.jsdelivr.net/npm/@jspsych/plugin-image-keyboard-response@1.1.3'
+      ],
+      [
+        'vendor/jspsych/plugins/plugin-survey-html-form.js',
+        'https://unpkg.com/@jspsych/plugin-survey-html-form@1.1.3',
+        'https://cdn.jsdelivr.net/npm/@jspsych/plugin-survey-html-form@1.1.3'
+      ]
+    ]
+  };
 
-    const STIMULI = [
-      'img/10.JPG',
-      'img/11.JPG',
-      'img/12.JPG',
-      'img/13.JPG',
-      'img/14.JPG',
-      'img/15.JPG',
-      'img/16.JPG',
-      'img/17.JPG',
-      'img/18.JPG'
-    ];
+  function q(id){ return document.getElementById(id); }
+  function log(msg, cls){
+    const el = q('boot-status');
+    const stamp = new Date().toLocaleTimeString();
+    el.innerHTML += `\n[${stamp}] ${msg}`;
+    if (cls) el.classList.add(cls);
+  }
 
-    function makeRepeatedShuffled(list, repeats){
-      const out = [];
-      for(let r=0; r<repeats; r++){
-        const copy = list.slice();
-        for (let i = copy.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [copy[i], copy[j]] = [copy[j], copy[i]];
-        }
-        out.push(...copy);
+  function loadOne(url){
+    return new Promise((resolve,reject)=>{
+      const s = document.createElement('script');
+      const isCdn = /^https?:\/\//.test(url);
+      s.src = url + (isCdn ? (url.includes('?') ? '' : `?cb=${Date.now()}`) : '');
+      s.async = false; // preserve order
+      if (isCdn) s.crossOrigin = 'anonymous';
+      s.onload = ()=> resolve(url);
+      s.onerror = ()=> reject(new Error('Load failed: '+url));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function loadWithFallback(urls){
+    let lastErr;
+    for(const u of urls){
+      try { return await loadOne(u); } catch(e){ lastErr = e; log(e.message, 'warn'); }
+    }
+    throw lastErr;
+  }
+
+  async function loadJsPsychAll(){
+    log('jsPsych 코어 로드 중…');
+    await loadWithFallback(CDN.core);
+    log('코어 OK', 'ok');
+
+    for(const trio of CDN.plugins){
+      const label = (trio[0].match(/plugin-([a-z-]+)/) || [,'?'])[1];
+      log(`플러그인 로드 중: ${label}`);
+      await loadWithFallback(trio);
+    }
+    log('플러그인 OK', 'ok');
+
+    if (typeof window.initJsPsych !== 'function') {
+      log('initJsPsych 미정의 – 파일이 실제로 존재하는지 확인 필요', 'warn');
+      log('필요 파일(로컬 폴백 사용 시):', 'warn');
+      log(' • vendor/jspsych/dist/jspsych.js', 'warn');
+      log(' • vendor/jspsych/plugins/plugin-*.js (preload, fullscreen, html-*, image-*, survey-*)', 'warn');
+      throw new Error('initJsPsych not found after all fallbacks');
+    }
+  }
+
+  // ========================= Experiment parameters & utils =========================
+  const IMAGE_DISPLAY_MS = 1000;   // 자극 1초
+  const REST_DISPLAY_MS  = 3000;   // 고정십자 3초
+  const REPEATS          = 3;      // 블록 반복
+  const STIMULI = [
+    'img/10.jpg','img/11.jpg','img/12.jpg','img/13.jpg','img/14.jpg','img/15.jpg','img/16.jpg','img/17.jpg','img/18.jpg'
+  ];
+
+  function makeBlocks(list, repeats){
+    const blocks = [];
+    for(let r=0; r<repeats; r++){
+      const copy = list.slice();
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
       }
-      return out;
+      blocks.push(copy);
+    }
+    return blocks;
+  }
+
+  // ========================= Minimal (no-cdn) runner =========================
+  function runMinimal(){
+    const root = document.body;
+    q('boot').style.display = 'none';
+
+    // Page 1: 안내 + 설문
+    const page1 = document.createElement('div');
+    page1.className = 'container';
+    page1.innerHTML = `
+      <h1 style="margin-bottom:1rem;">시지각 실험 안내 (미니멀 모드)</h1>
+      <p>CDN 차단 등으로 jsPsych를 불러오지 못해, 최소 기능으로 실험을 진행합니다.</p>
+      <p>총 <strong>27회</strong> 시행(이미지 <strong>1초</strong> 제시 → 고정십자 <strong>3초</strong> 휴식), 응답키 <strong>0/1/2/3</strong>.</p>
+      <h3 style="margin-top:1.2rem;">사전 설문</h3>
+      <div>
+        <label>참가자 ID(임의 코드):<br>
+          <input id="m_id" type="text" required style="width:100%" />
+        </label><br><br>
+        <label>연령:<br>
+          <input id="m_age" type="number" min="10" max="100" required style="width:100%" />
+        </label><br><br>
+        <label>성별:<br>
+          <select id="m_sex" required style="width:100%">
+            <option value="male">남성</option>
+            <option value="female">여성</option>
+            <option value="other">기타/응답 거부</option>
+          </select>
+        </label><br><br>
+        <label>시력 교정 상태:<br>
+          <select id="m_vision" required style="width:100%">
+            <option value="none">없음</option>
+            <option value="glasses">안경</option>
+            <option value="contacts">콘택트렌즈</option>
+          </select>
+        </label><br><br>
+        <label>주 사용 손:<br>
+          <select id="m_hand" required style="width:100%">
+            <option value="right">오른손</option>
+            <option value="left">왼손</option>
+            <option value="both">양손</option>
+          </select>
+        </label>
+      </div>
+      <div style="margin-top:1rem;">
+        <button id="m_next" class="btn">다음 (제출)</button>
+      </div>`;
+    root.appendChild(page1);
+
+    function reqFS(){
+      const el = document.documentElement;
+      if (el.requestFullscreen) return el.requestFullscreen();
+      if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+      return Promise.resolve();
     }
 
-    const jsPsych = initJsPsych({
-      display_element: 'jspsych-target',
-      on_finish: () => {
-        const csv = jsPsych.data.get().csv();
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.getElementById('download-link');
-        if (a) a.href = url;
+    document.getElementById('m_next').addEventListener('click', async ()=>{
+      const pid = document.getElementById('m_id').value.trim();
+      const age = document.getElementById('m_age').value.trim();
+      if (!pid || !age){ alert('참가자 ID와 연령은 필수입니다.'); return; }
+      await reqFS();
+      runMinimalTrials({
+        participant_id: pid,
+        age,
+        sex: document.getElementById('m_sex').value,
+        vision: document.getElementById('m_vision').value,
+        handedness: document.getElementById('m_hand').value
+      });
+      page1.remove();
+    });
+  }
+
+  function runMinimalTrials(props){
+    const root = document.body;
+
+    // Preload images (non-blocking)
+    const preload = STIMULI.map(src => new Promise(res=>{ const im = new Image(); im.onload=()=>res(true); im.onerror=()=>res(false); im.src = src + `?cb=${Date.now()}`; }));
+    Promise.all(preload).then(results=>{ log(`미니멀: 이미지 프리로드 완료 (성공 ${results.filter(Boolean).length}/${results.length})`); });
+
+    const screen = document.createElement('div');
+    screen.className = 'fullscreen';
+    root.appendChild(screen);
+
+    const blocks = makeBlocks(STIMULI, REPEATS);
+    const trials = [];
+    blocks.forEach((arr,b)=>arr.forEach((src,i)=>trials.push({src, block:b+1, order:i+1})));
+
+    const rows = [];
+
+    const fixation = () => {
+      screen.innerHTML = '<div class="fixation">+</div>';
+    };
+    const showImage = (src) => {
+      screen.innerHTML = '';
+      const img = document.createElement('img');
+      img.className = 'stim-img';
+      img.src = src + `?cb=${Date.now()}`;
+      screen.appendChild(img);
+      return img;
+    };
+
+    let idx = 0;
+    const next = () => {
+      if (idx >= trials.length) return end();
+      const t = trials[idx++];
+      const img = showImage(t.src);
+      const t0 = performance.now();
+      let rt = null; let key = '';
+      function onKey(e){
+        if(['0','1','2','3'].includes(e.key) && rt===null){
+          rt = Math.round(performance.now() - t0);
+          key = e.key;
+        }
+      }
+      window.addEventListener('keydown', onKey, { once:false });
+      setTimeout(()=>{
+        window.removeEventListener('keydown', onKey);
+        rows.push({
+          participant_id: props.participant_id,
+          age: props.age,
+          sex: props.sex,
+          vision: props.vision,
+          handedness: props.handedness,
+          phase: 'stim',
+          block: t.block,
+          order_in_block: t.order,
+          stim_name: t.src,
+          response: key,
+          rt: rt
+        });
+        fixation();
+        setTimeout(next, REST_DISPLAY_MS);
+      }, IMAGE_DISPLAY_MS);
+    };
+
+    function end(){
+      screen.remove();
+      const page2 = document.createElement('div');
+      page2.className = 'container';
+      // build CSV
+      const headers = Object.keys(rows[0] || {note:'no-data'});
+      const csv = [headers.join(',')].concat(rows.map(r=>headers.map(h=>JSON.stringify(r[h] ?? '')).join(','))).join('\n');
+      const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      page2.innerHTML = `
+        <h2>실험이 끝났습니다 (미니멀 모드)</h2>
+        <p>아래 버튼을 눌러 결과 파일(CSV)을 저장해 주세요.</p>
+        <p><a id="m_dl" class="btn" download="vp_experiment.csv">데이터(CSV) 저장</a></p>
+        <div style="margin-top:1rem;"><button id="m_next2" class="btn">다음</button></div>`;
+      document.body.appendChild(page2);
+      const a = document.getElementById('m_dl'); a.href = url;
+      document.getElementById('m_next2').addEventListener('click', ()=>{
+        page2.remove();
+        const page3 = document.createElement('div');
+        page3.className = 'container';
+        page3.innerHTML = `
+          <h2>CSV 파일 전송 안내</h2>
+          <p>방금 저장한 <code>vp_experiment.csv</code> 파일을 아래 이메일 주소로 보내주세요.</p>
+          <p style="font-size:1.1rem;">📧 <strong>mform1710@gmail.com</strong></p>
+          <div style="margin-top:1rem;"><button class="btn" onclick="window.close();">종료</button></div>`;
+        document.body.appendChild(page3);
+      });
+    }
+
+    fixation();
+    setTimeout(next, 500); // brief pause before first trial
+  }
+
+  // ========================= Boot UI wiring =========================
+  document.addEventListener('DOMContentLoaded', function(){
+    const btnLoad  = q('btn-load');
+    const btnCheck = q('btn-check');
+    const btnImg   = q('btn-imgcheck');
+    const btnSmoke = q('btn-smoke');
+    const btnStart = q('btn-start');
+    const btnMin   = q('btn-min');
+
+    log(`[1] DOM 준비됨 @ ${location.host}`);
+
+    // ① jsPsych 로드
+    btnLoad.addEventListener('click', async ()=>{
+      btnLoad.disabled = true;
+      try{
+        await loadJsPsychAll();
+        log('모든 라이브러리 로드 성공', 'ok');
+        btnCheck.disabled = false;
+        btnSmoke.disabled = false;
+        btnStart.disabled = false;
+      }catch(e){
+        log('로딩 실패: '+ e.message, 'err');
+        btnLoad.disabled = false;
+        // 추가 가이드
+        log('해결 팁:', 'warn');
+        log(' 1) 회사/기관망의 CDN 차단 여부 확인(unpkg/jsDelivr)', 'warn');
+        log(' 2) 광고차단/개인정보보호 확장프로그램 일시 비활성화', 'warn');
+        log(' 3) 리포에 jsPsych를 동봉하고 로컬 폴백 경로(vendor/jspsych/...)를 생성', 'warn');
+        log(' 4) 당장은 아래 "미니멀 모드"로 실험 진행 가능', 'warn');
       }
     });
 
-    const timeline = [];
+    // ② 라이브러리 점검 (테스트 케이스: 전역 심볼 확인)
+    function safeRun(fn){ try { return !!fn(); } catch { return false; } }
+    function checkLibs(){
+      const tests = [
+        ['initJsPsych', ()=> typeof window.initJsPsych === 'function'],
+        ['jsPsychHtmlButtonResponse', ()=> typeof window.jsPsychHtmlButtonResponse === 'function'],
+        ['jsPsychImageKeyboardResponse', ()=> typeof window.jsPsychImageKeyboardResponse === 'function'],
+        ['jsPsychSurveyHtmlForm', ()=> typeof window.jsPsychSurveyHtmlForm === 'function'],
+        ['jsPsychFullscreen', ()=> typeof window.jsPsychFullscreen === 'function'],
+        ['jsPsychPreload', ()=> typeof window.jsPsychPreload === 'function']
+      ];
+      let pass = 0;
+      log('라이브러리 점검 시작…');
+      tests.forEach(([name, fn])=>{
+        const ok = safeRun(fn);
+        log(` • ${name}: ${ok ? 'OK' : 'FAIL'}`, ok ? 'ok' : 'warn');
+        if (ok) pass++;
+      });
+      log(`테스트 케이스 합계: ${pass}/${tests.length} 통과`);
+      return pass === tests.length;
+    }
+    btnCheck.addEventListener('click', checkLibs);
 
-    timeline.push({
-      type: jsPsychHtmlKeyboardResponse,
-      stimulus: `<div class="container">
-        <h2>안내</h2>
-        <p>곧 자극 이미지가 랜덤 순서로 제시됩니다. 가능한 한 화면 중앙을 주시하세요.</p>
-        <p class="small">계속하려면 아무 키나 누르세요.</p>
-      </div>`
+    // ③ 이미지 경로 점검 (테스트 케이스: 9개 파일 성공 여부)
+    function checkImages(){
+      log('이미지 경로 점검 시작…');
+      let remaining = STIMULI.length;
+      let failed = 0;
+      STIMULI.forEach(src => {
+        const img = new Image();
+        img.onload = () => { if(--remaining===0) log(`이미지 점검 완료 (실패 ${failed}개)`); };
+        img.onerror = () => { failed++; log(`⚠️ 로드 실패: ${src}`, 'warn'); if(--remaining===0) log(`이미지 점검 완료 (실패 ${failed}개)`); };
+        img.src = src + `?cb=${Date.now()}`; // cache-bust
+      });
+    }
+    btnImg.addEventListener('click', checkImages);
+
+    // 환경 정보 출력
+    const btnEnv = q('btn-env');
+    btnEnv.addEventListener('click', ()=>{
+      log('환경 정보 출력 시작…');
+      log('UA: ' + navigator.userAgent);
+      log('URL: ' + location.href);
+      log('Referrer: ' + document.referrer);
+      log('Lang: ' + navigator.language);
+      log('Online: ' + (navigator.onLine ? 'yes' : 'no'));
     });
 
-    timeline.push({
-      type: jsPsychFullscreen,
-      message: `<div class="container">
-        <h2>전체 화면으로 전환합니다</h2>
-        <p>실험은 27개의 시행(자극 9개 × 3회)으로 구성됩니다.<br>
-        각 자극은 1초 동안 제시되고, 뒤이어 3초 동안 고정십자 휴식 화면이 나타납니다.</p>
-        <p class="small">※ 모바일보다 데스크탑/랩탑 사용을 권장합니다.</p>
-      </div>`,
-      fullscreen_mode: true,
-      button_label: '시작하기'
+    // ④ 스모크 테스트 (미니 타임라인) — jsPsych 필요
+    btnSmoke.addEventListener('click', ()=>{
+      if (!checkLibs()) { alert('먼저 jsPsych를 로드하고 라이브러리 점검을 통과하세요.'); return; }
+      q('boot').style.display = 'none';
+      const mount = q('jspsych-target');
+      mount.style.display = 'flex';
+
+      const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
+      const t = [];
+      t.push({ type: jsPsychHtmlButtonResponse, stimulus: '<div class="container"><h2>스모크 테스트 1/2</h2><p>이 화면이 보이면 jsPsych 코어/플러그인 로드가 정상입니다.</p></div>', choices: ['계속'] });
+      t.push({ type: jsPsychHtmlButtonResponse, stimulus: '<div class="container"><h2>스모크 테스트 2/2</h2><p>버튼 응답 플러그인 동작 OK.</p></div>', choices: ['끝'] });
+      jsPsych.run(t);
     });
 
-    timeline.push({
-      type: jsPsychPreload,
-      images: STIMULI,
-      continue_after_error: true,
-      message: '<div class="container"><p>자극 이미지를 불러오는 중…</p></div>',
-      error_message: '<div class="container"><p>일부 이미지를 불러오지 못했습니다. 계속 진행합니다.</p></div>',
-      on_error: function(file){ console.error('Preload 실패:', file); }
+    // ⑤ 전체 실험 시작 — jsPsych 필요
+    btnStart.addEventListener('click', ()=>{
+      if (!checkLibs()) { alert('먼저 jsPsych를 로드하고 라이브러리 점검을 통과하세요.'); return; }
+      q('boot').style.display = 'none';
+      const mount = q('jspsych-target');
+      mount.style.display = 'flex';
+
+      const jsPsych = initJsPsych({ display_element: 'jspsych-target' });
+      const timeline = [];
+
+      // (1) 목적/방법 안내 + 사전설문 (버튼 제출)
+      timeline.push({
+        type: jsPsychSurveyHtmlForm,
+        preamble: `
+          <div class="container">
+            <h1 style="margin-bottom:1rem;">시지각 실험 안내</h1>
+            <p>본 연구는 화면 중앙에 제시되는 이미지를 관찰할 때의 주시 행동을 파악하기 위한 <strong>시지각 과제</strong>입니다.</p>
+            <p>실험은 총 <strong>27회</strong> 시행(이미지 <strong>1초</strong> 제시 → 고정십자 <strong>3초</strong> 휴식)으로 구성되며, 전체 소요 시간은 약 <strong>3–4분</strong>입니다.</p>
+            <h3 style="margin-top:1.2rem;">절차</h3>
+            <ol>
+              <li>사전 설문(참가자 ID, 연령, 성별, 시력 교정, 주 사용 손)</li>
+              <li>자극 관찰 및 숫자키 <strong>0/1/2/3</strong> 응답</li>
+              <li>CSV 저장 후 이메일 전송</li>
+            </ol>
+            <h3 style="margin-top:1.2rem;">연구 참여 동의</h3>
+            <ul>
+              <li>수집 정보는 <strong>익명 ID</strong> 기준으로 사용되며 개인을 식별하지 않습니다.</li>
+              <li>언제든지 중단할 수 있으며 불이익은 없습니다.</li>
+              <li>데이터는 연구 목적 외에 사용되지 않습니다.</li>
+            </ul>
+            <p class="small" style="margin-top:0.8rem;">문의: <strong>mform1710@gmail.com</strong></p>
+          </div>`,
+        html: `
+          <div class="container">
+            <label>참가자 ID(임의 코드):<br>
+              <input name="participant_id" type="text" required style="width:100%" />
+            </label><br><br>
+            <label>연령:<br>
+              <input name="age" type="number" min="10" max="100" required style="width:100%" />
+            </label><br><br>
+            <label>성별:<br>
+              <select name="sex" required style="width:100%">
+                <option value="male">남성</option>
+                <option value="female">여성</option>
+                <option value="other">기타/응답 거부</option>
+              </select>
+            </label><br><br>
+            <label>시력 교정 상태:<br>
+              <select name="vision" required style="width:100%">
+                <option value="none">없음</option>
+                <option value="glasses">안경</option>
+                <option value="contacts">콘택트렌즈</option>
+              </select>
+            </label><br><br>
+            <label>주 사용 손:<br>
+              <select name="handedness" required style="width:100%">
+                <option value="right">오른손</option>
+                <option value="left">왼손</option>
+                <option value="both">양손</option>
+              </select>
+            </label>
+          </div>
+        `,
+        button_label: '다음 (제출)',
+        on_finish: (data)=>{
+          try{
+            const resp = JSON.parse(data.responses);
+            jsPsych.data.addProperties({
+              participant_id: resp.participant_id || '',
+              age: resp.age || '',
+              sex: resp.sex || '',
+              vision: resp.vision || '',
+              handedness: resp.handedness || ''
+            });
+          }catch(e){ /* ignore */ }
+        }
+      });
+
+      // 전체화면 전환 (버튼)
+      timeline.push({
+        type: jsPsychFullscreen,
+        message: `<div class="container">
+          <h2>전체 화면으로 전환합니다</h2>
+          <p>자극이 제시되는 동안 숫자키 <strong>0/1/2/3</strong> 중 하나를 눌러 응답해 주세요.</p>
+        </div>`,
+        fullscreen_mode: true,
+        button_label: '시작'
+      });
+
+      // 이미지 프리로드 (에러 무시, 진행)
+      timeline.push({
+        type: jsPsychPreload,
+        images: STIMULI,
+        continue_after_error: true,
+        message: '<div class="container"><p>자극 이미지를 불러오는 중…</p></div>',
+        error_message: '<div class="container"><p>일부 이미지를 불러오지 못했습니다. 계속 진행합니다.</p></div>',
+        on_error: function(file){ console.error('Preload 실패:', file); }
+      });
+
+      // 고정십자(휴식)
+      const fixation = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: '<div class="center-wrap"><div class="fixation">+</div></div>',
+        choices: 'NO_KEYS',
+        trial_duration: REST_DISPLAY_MS,
+        data: { phase: 'rest' }
+      };
+
+      // 자극(응답: 0/1/2/3)
+      const showStim = {
+        type: jsPsychImageKeyboardResponse,
+        stimulus: jsPsych.timelineVariable('stimulus'),
+        render_on_canvas: false,
+        choices: ['0','1','2','3'],
+        trial_duration: IMAGE_DISPLAY_MS,
+        maintain_aspect_ratio: true,
+        data: {
+          phase: 'stim',
+          block: jsPsych.timelineVariable('block'),
+          order_in_block: jsPsych.timelineVariable('order_in_block'),
+          stim_name: jsPsych.timelineVariable('stimulus')
+        }
+      };
+
+      // 블록 단위 셔플 → 총 27 시행
+      const blocks = makeBlocks(STIMULI, REPEATS);
+      const timeline_variables = [];
+      blocks.forEach((bArr, bIdx)=>{
+        bArr.forEach((src, i)=>{
+          timeline_variables.push({ stimulus: src, block: bIdx+1, order_in_block: i+1 });
+        });
+      });
+
+      timeline.push({ timeline: [showStim, fixation], timeline_variables });
+
+      // CSV 저장 페이지
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `<div class=\"container\">\n          <h2>실험이 끝났습니다</h2>\n          <p>아래 버튼을 눌러 결과 파일(CSV)을 저장해 주세요.</p>\n          <p><a id=\"download-link\" class=\"btn\" download=\"vp_experiment.csv\">데이터(CSV) 저장</a></p>\n          <p class=\"small\">CSV에는 참가자 정보(ID/연령/성별/시력/손잡이), 시행 정보(block/order), 응답(0/1/2/3), 반응시간 등이 포함됩니다.</p>\n        </div>`,
+        choices: ['다음'],
+        on_load: () => {
+          const csv = jsPsych.data.get().csv();
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.getElementById('download-link');
+          if (a) a.href = url;
+        }
+      });
+
+      // 전송 안내/문의처 (종료)
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `<div class=\"container\">\n          <h2>CSV 파일 전송 안내</h2>\n          <p>방금 저장한 <code>vp_experiment.csv</code> 파일을 아래 이메일 주소로 보내주세요.</p>\n          <p style=\"font-size:1.1rem;\">📧 <strong>mform1710@gmail.com</strong></p>\n          <p class=\"small\">문의가 있거나 오류가 발생한 경우 위 주소로 연락해 주세요.</p>\n        </div>`,
+        choices: ['종료']
+      });
+
+      jsPsych.run(timeline);
     });
 
-    const fixation = {
-      type: jsPsychHtmlKeyboardResponse,
-      stimulus: '<div class="center-wrap"><div class="fixation">+</div></div>',
-      choices: 'NO_KEYS',
-      trial_duration: REST_DISPLAY_MS,
-      data: { phase: 'rest' }
-    };
-
-    const showStim = {
-      type: jsPsychImageKeyboardResponse,
-      stimulus: jsPsych.timelineVariable('stimulus'),
-      render_on_canvas: false,
-      choices: 'NO_KEYS',
-      trial_duration: IMAGE_DISPLAY_MS,
-      maintain_aspect_ratio: true,
-      data: { phase: 'stim' }
-    };
-
-    const repeatedShuffled = makeRepeatedShuffled(STIMULI, REPEATS);
-
-    const trial_procedure = {
-      timeline: [showStim, fixation],
-      timeline_variables: repeatedShuffled.map(src => ({ stimulus: src }))
-    };
-
-    timeline.push(trial_procedure);
-
-    timeline.push({
-      type: jsPsychHtmlKeyboardResponse,
-      stimulus: `<div class="container">
-        <h2>끝났습니다</h2>
-        <p>참여해 주셔서 감사합니다.</p>
-        <p><a id="download-link" class="btn" download="vp_experiment.csv">데이터(CSV) 저장</a></p>
-        <p class="small">CSV에는 시행 번호, 자극 파일명, 시간 등 기본 로그가 포함됩니다.</p>
-        <p class="small">창을 닫거나 <strong>Esc</strong>로 전체화면을 종료해도 됩니다.</p>
-      </div>`,
-      choices: 'NO_KEYS',
-      trial_duration: 3000
-    });
-
-    jsPsych.run(timeline);
+    // 대안: 미니멀 모드 (CDN 불가 환경용)
+    btnMin.addEventListener('click', runMinimal);
   });
   </script>
 </body>
