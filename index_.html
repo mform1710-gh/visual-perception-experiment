@@ -177,7 +177,13 @@
     intro.className = 'container';
     intro.innerHTML = `
       <h2>실험 1: 요소 배치 과제</h2>
-      <p>2장의 이미지를 각각 한 번씩 보게 됩니다. 각 이미지마다 창, 문, 그리고 파티션을 배치하세요:</p>
+      <p>2장의 이미지를 각각 한 번씩 보게 됩니다(항상 10 → 11 순서). 각 이미지마다 다음을 <strong>각 1개씩</strong> 배치하세요:</p>
+      <ul>
+        <li>창: 길이 200px, 폭 10px 선분</li>
+        <li>문: 지름 100px 원</li>
+        <li>파티션: 길이 100px, 폭 10px 선분 <span class="small">(파티션은 설치하지 않아도 됩니다.)</span></li>
+      </ul>
+      <p class="small">버튼으로 배치 항목을 선택 → 이미지에서 클릭하여 배치 → 항목을 클릭하면 <strong>선택</strong>됨. 선택 상태에서 <strong>드래그 이동</strong> 가능, <strong>회전 90°</strong> 및 <strong>삭제</strong> 버튼 사용 가능. <strong>창과 문</strong>을 배치하면 "다음 이미지" 버튼이 활성화됩니다.</p>
       <div style="margin-top:1rem;"><button id="f1_start" class="btn">시작</button></div>`;
     root.appendChild(intro);
 
@@ -431,31 +437,27 @@
 
       function end(){
         screen.remove();
-        const page2 = document.createElement('div'); page2.className = 'container';
-        const headers = Object.keys(EXP_ROWS[0] || {note:'no-data'});
-        const csv = [headers.join(',')].concat(EXP_ROWS.map(r=>headers.map(h=>JSON.stringify(r[h] ?? '')).join(','))).join('\n');
+        // ---- CSV: 모든 행의 키를 합집합으로 수집해 응답(response)까지 누락 없이 저장 ----
+        const rows = EXP_ROWS.slice();
+        const keySet = new Set(); rows.forEach(r=>Object.keys(r).forEach(k=>keySet.add(k)));
+        const preferred = ['participant_id','age','sex','vision','handedness','phase','block','order_in_block','stim_name','image','item','rel_x','rel_y','angle','px_left','px_top','px_w','px_h','response','rt'];
+        const headers = preferred.filter(k=>keySet.has(k)).concat([...keySet].filter(k=>!preferred.includes(k)));
+        const csv = [headers.join(',')].concat(rows.map(r=>headers.map(h=>JSON.stringify(r[h] ?? '')).join(','))).join('\n');
         const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob);
-        page2.innerHTML = `
-          <h2>모든 실험이 끝났습니다</h2>
-          <p>아래 버튼을 눌러 결과 파일(CSV)을 저장해 주세요.</p>
-          <p><a id="m_dl" class="btn" download="vp_experiment.csv">데이터(CSV) 저장</a></p>
-          <div style="margin-top:1rem;"><button id="m_next2" class="btn">전송 안내</button></div>`;
-        document.body.appendChild(page2);
-        document.getElementById('m_dl').href = url;
-        document.getElementById('m_next2').addEventListener('click', ()=>{
-          page2.remove(); const page3 = document.createElement('div'); page3.className = 'container';
-          const thumbs = (window.__FIRST_THUMBS__||[]).map(t=>`<li><a href="${t.href}" download="${t.name}">${t.name}</a></li>`).join('') || '<li>썸네일이 없습니다.</li>';
-          page3.innerHTML = `
-            <h2>CSV 및 이미지 전송 안내</h2>
-            <p>다음 파일들을 아래 이메일로 보내주세요:</p>
-            <ul>
-              <li><a href="${url}" download="vp_experiment.csv"><code>vp_experiment.csv</code></a> (실험 1+2 전체 데이터)</li>
-            </ul>
-            <ul>${thumbs}</ul>
-            <p style="font-size:1.1rem;">📧 <strong>mform1710@gmail.com</strong></p>
-            <p style="margin-top:1rem;">참여해주셔서 감사합니다.</p>`;
-          document.body.appendChild(page3);
-        });
+
+        // ---- 최종 전송 안내 페이지로 바로 이동 (중간 저장 페이지 스킵) ----
+        const page3 = document.createElement('div'); page3.className = 'container';
+        const thumbs = (window.__FIRST_THUMBS__||[]).map(t=>`<li><a href="${t.href}" download="${t.name}">${t.name}</a></li>`).join('') || '<li>썸네일이 없습니다.</li>';
+        page3.innerHTML = `
+          <h2>CSV 및 이미지 전송 안내</h2>
+          <p>다음 파일들을 아래 이메일로 보내주세요:</p>
+          <ul>
+            <li><a href="${url}" download="vp_experiment.csv"><code>vp_experiment.csv</code></a> (실험 1+2 전체 데이터)</li>
+          </ul>
+          <ul>${thumbs}</ul>
+          <p style="font-size:1.1rem;">📧 <strong>mform1710@gmail.com</strong></p>
+          <p style="margin-top:1rem;">참여해주셔서 감사합니다.</p>`;
+        document.body.appendChild(page3);
       }
     });
   }
