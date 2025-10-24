@@ -108,9 +108,7 @@
     page1.innerHTML = `
       <h1 style="margin-bottom:1rem;">시지각 실험 안내</h1>
       <p>참여 전에 간단한 사전 설문을 작성해 주세요. 이후 <strong>실험 1(배치 과제)</strong>과 <strong>실험 2(숫자 응답 과제)</strong>가 순서대로 진행됩니다.</p>
-  //<table class="survey-table">
-  //<tr>
-  //<td style="width:60%; min-width:320px;">
+
       <h3 style="margin-top:1.2rem;">사전 설문</h3>
       <div>
         <label>참가자 ID:
@@ -158,15 +156,8 @@
       <div style="margin-top:1rem;">
         <button id="m_next" class="btn">다음 (제출)</button>
       </div>`;
-    //</td>
-    //<td>
-      <figure style="margin:0;">
-      <img class="survey-img" src="dist_.JPG" alt="시선 거리 및 자세(예: Gaze point 50cm 안내)" />
-      <figcaption class="small" style="margin-top:.5rem; color:#9aa3af;">참고: 권장 거리/자세(예시). 이미지는 설명용이며, 실험 환경에 맞게 조정하세요.</figcaption>
-      </figure>
-    //</td>
-    //</tr>
-   // </table>
+
+
     document.body.appendChild(page1);
 
     document.getElementById('m_next').addEventListener('click', async ()=>{
