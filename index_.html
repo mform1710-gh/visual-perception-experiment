@@ -213,7 +213,7 @@
               각 항목은 <strong>최대 3개</strong>까지 배치할 수 있습니다.
             </p>
             <div class="toolbar">
-              <button class="btn" data-tool="window">창 배치(200×10)</button>
+              <button class="btn" data-tool="window">창 배치(100×10)</button>
               <button class="btn" data-tool="door">문 배치(Ø100)</button>
             </div>
             <div class="toolbar">
@@ -253,7 +253,7 @@
       function placeAt(tool, evt){
         if (placed[tool].length >= 3) { setStatus(`${tool}는 최대 3개까지만 배치할 수 있습니다.`); return; }
         const p=relPos(evt); let el;
-        if (tool==='window') el=makeRect('window',200,10);
+        if (tool==='window') el=makeRect('window',100,10);
         else el=makeDoor();
         wrap.appendChild(el);
         centerPlace(el, p.x, p.y);
@@ -355,7 +355,7 @@
               function drawRect(it, color){
                 const cx=ox + (it.rx*w); const cy=oy + (it.ry*h);
                 const rw=(it.px_w||100)*scale; const rh=(it.px_h||10)*scale;
-                ctx.save(); ctx.translate(cx, cy); if((it.angle||'0')==='90'){ ctx.rotate(Math.PI/2); }
+                ctx.save(); ctx.translate(cx, cy); 
                 ctx.fillStyle=color; ctx.globalAlpha=0.8; ctx.fillRect(-rw/2, -rh/2, rw, rh); ctx.restore();
               }
               function drawDoor(it){
@@ -376,7 +376,7 @@
           return new Promise(function(res){
             c.toBlob(function(blob){
               const href = URL.createObjectURL(blob||new Blob());
-              const pid = PARTICIPANT.id || 'anon'; const name = `${pid}_exp1_overlay_${i+1}.png`;
+              const pid = PARTICIPANT.id || 'anon'; const name = `${pid}_exp1_overlay_${i+1}_doors${placed.door.length}.png`;
               window.__FIRST_THUMBS__.push({ name, href });
               try { window.dispatchEvent(new CustomEvent('overlay-ready', { detail: { name, href } })); } catch(_){}
               res();
