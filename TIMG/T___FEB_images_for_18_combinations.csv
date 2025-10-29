@@ -1,0 +1,32 @@
+a,b,c,d,image
+0.85,1,0.4,0.55,/mnt/data/T_FEB_a0.85_b1.00_c0.40_d0.55.png
+0.85,1,0.4,2.1,/mnt/data/T_FEB_a0.85_b1.00_c0.40_d2.10.png
+0.85,1,0.4,3.7,/mnt/data/T_FEB_a0.85_b1.00_c0.40_d3.70.png
+1.6,1,0.4,0.55,/mnt/data/T_FEB_a1.60_b1.00_c0.40_d0.55.png
+1.6,1,0.4,2.1,/mnt/data/T_FEB_a1.60_b1.00_c0.40_d2.10.png
+1.6,1,0.4,3.7,/mnt/data/T_FEB_a1.60_b1.00_c0.40_d3.70.png
+1.6,1,1.4,0.55,/mnt/data/T_FEB_a1.60_b1.00_c1.40_d0.55.png
+1.6,1,1.4,2.1,/mnt/data/T_FEB_a1.60_b1.00_c1.40_d2.10.png
+1.6,1,1.4,3.7,/mnt/data/T_FEB_a1.60_b1.00_c1.40_d3.70.png
+2.4,1,0.4,0.55,/mnt/data/T_FEB_a2.40_b1.00_c0.40_d0.55.png
+2.4,1,0.4,2.1,/mnt/data/T_FEB_a2.40_b1.00_c0.40_d2.10.png
+2.4,1,0.4,3.7,/mnt/data/T_FEB_a2.40_b1.00_c0.40_d3.70.png
+2.4,1,1.4,0.55,/mnt/data/T_FEB_a2.40_b1.00_c1.40_d0.55.png
+2.4,1,1.4,2.1,/mnt/data/T_FEB_a2.40_b1.00_c1.40_d2.10.png
+2.4,1,1.4,3.7,/mnt/data/T_FEB_a2.40_b1.00_c1.40_d3.70.png
+,,,,
+(setq a 0.85 b 1 c 0.4 d 0.55),,,,
+(setq d 2.1),,,,
+(setq d 3.7),,,,
+(setq a 1.6 d 0.55) ,,,,
+(setq d 2.1),,,,
+(setq d 3.7),,,,
+(setq c 1.4 d 0.55) ,,,,
+(setq d 2.1),,,,
+(setq d 3.7),,,,
+(setq a 2.4 d 0.55) ,,,,
+(setq d 2.1),,,,
+(setq d 3.7),,,,
+(setq c 1.4 d 0.55) ,,,,
+(setq d 2.1),,,,
+(setq d 3.7),,,,
