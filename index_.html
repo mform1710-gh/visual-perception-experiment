@@ -214,7 +214,7 @@
             </p>
             <div class="toolbar">
               <button class="btn" data-tool="window">창 배치(100×10)</button>
-              <button class="btn" data-tool="door">문 배치(Ø100)</button>
+              <button class="btn" data-tool="door">문 배치(Ø70)</button>
             </div>
             <div class="toolbar">
               <button class="btn" id="btn-rotate" disabled>선택 회전(90°)</button>
@@ -245,7 +245,7 @@
 
       // 도형 생성 (dataset: tool, angle[0|90])
       function makeRect(tool, w, h){ const el=document.createElement('div'); el.className=`shape ${tool}`; el.style.width=w+'px'; el.style.height=h+'px'; el.dataset.tool=tool; el.dataset.angle='0'; return el; }
-      function makeDoor(){ const el=document.createElement('div'); el.className='shape door'; el.style.width='100px'; el.style.height='100px'; el.dataset.tool='door'; return el; }
+      function makeDoor(){ const el=document.createElement('div'); el.className='shape door'; el.style.width='70px'; el.style.height='70px'; el.dataset.tool='door'; return el; }
 
       function relPos(evt){ const rect=wrap.getBoundingClientRect(); const x=evt.clientX-rect.left; const y=evt.clientY-rect.top; const rx=x/rect.width; const ry=y/rect.height; return {x,y,rx,ry,rect}; }
       function centerPlace(el, cx, cy){ const w=el.offsetWidth, h=el.offsetHeight; el.style.left=Math.round(cx - w/2)+'px'; el.style.top=Math.round(cy - h/2)+'px'; }
