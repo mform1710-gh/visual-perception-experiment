@@ -69,7 +69,7 @@
   const REPEATS          = 3;      // 블록 반복 (9자극 ×3 = 27 시행)
 
   const STIMULI = [
-    'img/10.JPG','img/11.JPG','img/12.JPG','img/13.JPG','img/14.JPG','img/15.JPG','img/16.JPG','img/17.JPG','img/18.JPG'
+    'TIMG/1.JPG','TIMG/2.JPG','TIMG/3.JPG','TIMG/4.JPG','TIMG/5.JPG','TIMG/6.JPG','TIMG/7.JPG','TIMG/8.JPG','TIMG/9.JPG','TIMG/10.JPG','TIMG/11.JPG','TIMG/12.JPG','TIMG/13.JPG','TIMG/14.JPG','TIMG/15.JPG'
   ];
 
   function shuffle(arr){ const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
@@ -395,7 +395,7 @@
     runSecondExperiment(props);
   }
 
-  // ========================= 두번째 실험: 27 시행(자극 3초 + 휴식 3초) =========================
+  // ========================= 두번째 실험: 45 시행(자극 3초 + 휴식 3초) =========================
   function runSecondExperiment(props){
     const root = document.body;
 
@@ -404,7 +404,7 @@
     info.className = 'container';
     info.innerHTML = `
       <h2>실험 2 안내</h2>
-      <p>앞의 실험에서 본 것과 유사한 이미지를 모두 27회 보게 됩니다. 이미지가 제시되는 동안 벽으로 둘러 싸인  공간을 분할하고, 그 개수를 1~3 중 하나를 눌러 응답하세요.</p>
+      <p>앞의 실험에서 본 것과 유사한 이미지를 모두 45회 보게 됩니다. 이미지가 제시되는 동안 벽으로 둘러 싸인  공간을 분할하고, 그 개수를 1~3 중 하나를 눌러 응답하세요.</p>
       <div style="margin-top:1rem;"><button id="exp2_go" class="btn">시작</button></div>`;
     root.appendChild(info);
 
