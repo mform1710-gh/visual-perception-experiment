@@ -66,7 +66,7 @@
   // ========================= 실험 파라미터 & 유틸 =========================
   const IMAGE_DISPLAY_MS = 3000;   // 자극 3초
   const REST_DISPLAY_MS  = 3000;   // 고정십자 3초
-  const REPEATS          = 3;      // 블록 반복 (9자극 ×3 = 27 시행)
+  const REPEATS          = 3;      // 블록 반복
 
   const STIMULI = [
     'TIMG/1.JPG','TIMG/2.JPG','TIMG/3.JPG','TIMG/4.JPG','TIMG/5.JPG','TIMG/6.JPG','TIMG/7.JPG','TIMG/8.JPG','TIMG/9.JPG','TIMG/10.JPG','TIMG/11.JPG','TIMG/12.JPG','TIMG/13.JPG','TIMG/14.JPG','TIMG/15.JPG'
@@ -80,7 +80,8 @@
 
   // 공용 데이터 버스
   const EXP_ROWS = [];
-  const FIRST_STIM = ['img/10.JPG','img/11.JPG']; // 실험1 고정 순서
+  // ⬇⬇⬇ 경로 수정: 실험1 고정 순서도 TIMG 디렉터리로
+  const FIRST_STIM = ['TIMG/4.JPG','TIMG/7.JPG'];
 
   // ========================= 부팅 전 자가 점검 (이미지 경로) =========================
   async function selfCheck(){
@@ -170,7 +171,7 @@
         participant_id: pid,
         age,
         sex: document.getElementById('m_sex').value,
-        vision: document.getElementById('m_vision').value,
+        vision: "", // 폼에 시력 입력이 없으므로 안전하게 빈값으로 설정
         handedness: document.getElementById('m_hand').value
       };
       page1.remove();
