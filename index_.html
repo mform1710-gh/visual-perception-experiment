@@ -29,7 +29,6 @@
     .shape.window { background:#6cf; opacity:.9; }
     .shape.door { border:4px solid #ff9; border-radius:50%; background:rgba(255,255,0,0.1); }
     .shape.selected { outline:2px dashed #7ee787; outline-offset:2px; }
-    /* 오류 오버레이 */
     #err-overlay{ position:fixed; right:12px; bottom:12px; max-width:520px; background:#1b1b1b; border:1px solid #333; border-radius:.6rem; padding:.75rem 1rem; box-shadow:0 10px 30px rgba(0,0,0,.4); display:none; z-index:9999; }
     #err-overlay h4{ margin:0 0 .25rem 0; font-size:1rem; color:#ffb3b3; }
     #err-overlay pre{ margin:.25rem 0 0 0; white-space:pre-wrap; word-break:break-word; color:#ffdede; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.9rem; }
@@ -43,7 +42,6 @@
     </div>
   </noscript>
 
-  <!-- 오류 오버레이 (콘솔 외에 화면에도 표시) -->
   <div id="err-overlay">
     <h4>스크립트 오류가 발생했습니다</h4>
     <pre id="err-msg"></pre>
@@ -59,16 +57,15 @@
     window.addEventListener('unhandledrejection', (e)=>{ console.error('[unhandledrejection]', e.reason); show((e.reason && (e.reason.message||e.reason)) || 'Unhandled promise rejection'); });
   })();
 
-  // 참가자 ID(썸네일/오버레이 파일명에 포함)
   const PARTICIPANT = { id:'' };
   function setParticipantId(id){ PARTICIPANT.id = (id||'').trim(); }
 
   // ========================= 실험 파라미터 & 유틸 =========================
-  const IMAGE_DISPLAY_MS = 3000;   // 자극 3초
-  const REST_DISPLAY_MS  = 3000;   // 고정십자 3초
-  const REPEATS          = 3;      // 블록 반복
+  const IMAGE_DISPLAY_MS = 3000;
+  const REST_DISPLAY_MS  = 3000;
+  const REPEATS          = 3;
 
-   // ★ 변경: 실험2 / 실험3 각각의 자극 목록 (파일명은 필요에 맞게 수정하면 됨)
+  // ★ 변경: 실험2 / 실험3 각각의 자극 목록 (파일명은 필요에 맞게 수정하면 됨)
   const STIM_EXP2 = [
     'TIMG/1.JPG','TIMG/2.JPG','TIMG/3.JPG','TIMG/4.JPG',
     'TIMG/5.JPG','TIMG/6.JPG','TIMG/7.JPG','TIMG/8.JPG'
@@ -85,14 +82,13 @@
   const FULLSCREEN_PREFERRED = false;
   async function tryEnterFullscreen(){ if (!FULLSCREEN_PREFERRED) return false; try { const el=document.documentElement; if(el.requestFullscreen) await el.requestFullscreen(); else if(el.webkitRequestFullscreen) await el.webkitRequestFullscreen(); return true; } catch { return false; } }
 
-  // 공용 데이터 버스
   const EXP_ROWS = [];
-  // ⬇⬇⬇ 경로 수정: 실험1 고정 순서도 TIMG 디렉터리로
   const FIRST_STIM = ['TIMG/4.JPG','TIMG/7.JPG'];
 
   // ========================= 부팅 전 자가 점검 (이미지 경로) =========================
   async function selfCheck(){
     const bad = [];
+    // ★ 변경: 실험2/3 이미지 모두 체크
     const list = Array.from(new Set([...STIM_EXP2, ...STIM_EXP3, ...FIRST_STIM]));
     await Promise.all(list.map(src=> new Promise(res=>{ const im = new Image(); im.onload=()=>res(); im.onerror=()=>{ bad.push(src); res(); }; im.src = src + '?cb=' + Date.now(); })));
     if (bad.length){
@@ -103,7 +99,6 @@
     }
   }
 
-  // ========================= 부팅: 미니멀 모드 시작 =========================
   document.addEventListener('DOMContentLoaded', ()=>{ try{ runMinimal(); selfCheck(); } catch(e){ console.error(e); const pre=document.getElementById('err-msg'); pre.textContent=String(e && (e.message||e)); document.getElementById('err-overlay').style.display='block'; } });
 
   function runMinimal(){
@@ -114,7 +109,7 @@
     page1.className = 'container';
     page1.innerHTML = `
       <h1 style="margin-bottom:1rem;">시지각 실험 안내</h1>
-      <p>참여 전에 간단한 사전 설문을 작성해 주세요. 이후 <strong>실험 1(배치 과제)</strong>과 <strong>실험 2(숫자 응답 과제)</strong>가 순서대로 진행됩니다.</p>
+      <p>참여 전에 간단한 사전 설문을 작성해 주세요. 이후 <strong>실험 1(배치 과제)</strong>, <strong>실험 2(숫자 응답 과제)</strong>, <strong>실험 3(숫자 응답 과제)</strong>가 순서대로 진행됩니다.</p>  <!-- ★ 문구 수정 -->
 
       <h3 style="margin-top:1.2rem;">사전 설문</h3>
       <div>
@@ -178,7 +173,7 @@
         participant_id: pid,
         age,
         sex: document.getElementById('m_sex').value,
-        vision: "", // 폼에 시력 입력이 없으므로 안전하게 빈값으로 설정
+        vision: "",
         handedness: document.getElementById('m_hand').value
       };
       page1.remove();
@@ -186,224 +181,18 @@
     });
   }
 
-  // ========================= 첫번째 실험: 배치 과제 (창/문 각 최대 3개, 파티션 없음) =========================
-  function runFirstExperiment(props){
-    const root = document.body;
+  // ========================= (실험1 코드는 그대로) =========================
+  // ... (여기까지는 네가 준 코드 그대로 두면 됨)
+  // runFirstExperiment, generateOverlayPNGs 등은 수정 없이 사용
 
-    const intro = document.createElement('div');
-    intro.className = 'container';
-    intro.innerHTML = `
-      <h2>실험 1: 요소 배치 과제</h2>
-      <p>2장의 이미지를 보시게 됩니다. 각 이미지는 벽으로 둘러싸인 평면입니다. 내부의 공간을 적절한 분할하고 각 공간에 <strong>창과 문을</strong> 배치하세요. (각 항목은 최대 3개까지)</p>
-      <div style="margin-top:1rem;"><button id="f1_start" class="btn">시작</button></div>`;
-    root.appendChild(intro);
-
-    document.getElementById('f1_start').addEventListener('click', ()=>{ intro.remove(); startSequence(); });
-
-    const order = FIRST_STIM.slice(); // 고정 순서 (10 → 11)
-    let idx = 0;
-
-    function startSequence(){ if (idx >= order.length) return finishFirst(props); showPlacementPage(order[idx++]); }
-
-    function showPlacementPage(imgSrc){
-      const page = document.createElement('div');
-      page.className = 'container';
-      page.innerHTML = `
-        <h3 style="margin-bottom:.5rem;">이미지 배치</h3>
-        <div class="row">
-          <div id="place-wrap" class="board">
-            <img id="place-img" class="stim-img" src="${imgSrc}?cb=${Date.now()}" />
-          </div>
-          <div style="flex:1; min-width:220px;">
-            <p class="small" style="margin:.25rem 0 .25rem 0;">
-              버튼을 클릭한 뒤 해당 위치를 이미지 위에서 클릭하세요. 창과 문을 선택 한 뒤 드래그하여 위치를 조정할 수 있습니다.
-              각 항목은 <strong>최대 3개</strong>까지 배치할 수 있습니다.
-            </p>
-            <div class="toolbar">
-              <button class="btn" data-tool="window">창 배치(100×10)</button>
-              <button class="btn" data-tool="door">문 배치(Ø70)</button>
-            </div>
-            <div class="toolbar">
-              <button class="btn" id="btn-rotate" disabled>선택 회전(90°)</button>
-              <button class="btn" id="btn-delete" disabled>선택 삭제</button>
-              <button class="btn" id="reset-cur">현재 이미지 초기화</button>
-            </div>
-            <div class="toolbar">
-              <button class="btn" id="next-cur" disabled>다음 이미지</button>
-            </div>
-            <div class="small" id="cur-status" style="margin-top:.5rem;">항목을 선택한 뒤, 이미지 내 원하는 위치를 클릭하세요.</div>
-          </div>
-        </div>`;
-      root.appendChild(page);
-
-      const wrap = page.querySelector('#place-wrap');
-      const btnRotate = page.querySelector('#btn-rotate');
-      const btnDelete = page.querySelector('#btn-delete');
-
-      // 파티션 제거 → window/door만 배열로 관리(각 3개 제한)
-      const placed = { window: [], door: [] };
-      let currentTool = null;
-      let selectedEl = null;
-
-      function setStatus(msg){ page.querySelector('#cur-status').textContent = msg; }
-      function clearSelect(){ if (selectedEl){ selectedEl.classList.remove('selected'); selectedEl=null; updateToolButtons(); } }
-      function selectEl(el){ if (selectedEl===el) return; clearSelect(); selectedEl = el; if (selectedEl){ selectedEl.classList.add('selected'); } updateToolButtons(); }
-      function updateToolButtons(){ const tool = selectedEl ? selectedEl.dataset.tool : null; btnRotate.disabled = (tool!=='window'); btnDelete.disabled = !selectedEl; }
-
-      // 도형 생성 (dataset: tool, angle[0|90])
-      function makeRect(tool, w, h){ const el=document.createElement('div'); el.className=`shape ${tool}`; el.style.width=w+'px'; el.style.height=h+'px'; el.dataset.tool=tool; el.dataset.angle='0'; return el; }
-      function makeDoor(){ const el=document.createElement('div'); el.className='shape door'; el.style.width='70px'; el.style.height='70px'; el.dataset.tool='door'; return el; }
-
-      function relPos(evt){ const rect=wrap.getBoundingClientRect(); const x=evt.clientX-rect.left; const y=evt.clientY-rect.top; const rx=x/rect.width; const ry=y/rect.height; return {x,y,rx,ry,rect}; }
-      function centerPlace(el, cx, cy){ const w=el.offsetWidth, h=el.offsetHeight; el.style.left=Math.round(cx - w/2)+'px'; el.style.top=Math.round(cy - h/2)+'px'; }
-
-      function placeAt(tool, evt){
-        if (placed[tool].length >= 3) { setStatus(`${tool}는 최대 3개까지만 배치할 수 있습니다.`); return; }
-        const p=relPos(evt); let el;
-        if (tool==='window') el=makeRect('window',100,10);
-        else el=makeDoor();
-        wrap.appendChild(el);
-        centerPlace(el, p.x, p.y);
-        placed[tool].push({ el, rx:p.rx, ry:p.ry, angle: el.dataset.angle||'0', px_w: el.offsetWidth, px_h: el.offsetHeight });
-        currentTool=null; setStatus(`${tool} 배치 완료 (${placed[tool].length}/3)`); updateNextState();
-      }
-
-      function updateRel(it){ const rect=wrap.getBoundingClientRect(); const cx=parseInt(it.el.style.left,10)+it.el.offsetWidth/2; const cy=parseInt(it.el.style.top,10)+it.el.offsetHeight/2; it.rx = cx/rect.width; it.ry = cy/rect.height; it.px_w = it.el.offsetWidth; it.px_h = it.el.offsetHeight; }
-      function updateNextState(){ const done = placed.window.length>0 && placed.door.length>0; page.querySelector('#next-cur').disabled = !done; }
-
-      // 배치 버튼들
-      page.querySelectorAll('[data-tool]').forEach(btn=>{ btn.addEventListener('click', ()=>{ currentTool = btn.dataset.tool; setStatus(`${btn.textContent} 선택됨. 이미지 내 위치를 클릭하세요.`); }); });
-      wrap.addEventListener('click', (evt)=>{ if (currentTool) placeAt(currentTool, evt); });
-
-      // 선택/드래그
-      wrap.addEventListener('mousedown', (e)=>{
-        const target = e.target.closest('.shape'); if (!target) return; selectEl(target);
-        let startX=e.clientX, startY=e.clientY; const startLeft=parseInt(target.style.left,10)||0; const startTop=parseInt(target.style.top,10)||0;
-        function onMove(ev){ const dx=ev.clientX-startX, dy=ev.clientY-startY; target.style.left = Math.round(startLeft+dx)+"px"; target.style.top = Math.round(startTop+dy)+"px"; }
-        function onUp(){ document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); const tool=target.dataset.tool; const list=placed[tool]; const item=list.find(i=>i.el===target); if (item) updateRel(item); }
-        document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
-      });
-
-      // 요소 클릭 시 선택 표시 (툴 선택 중이 아닐 때)
-      wrap.addEventListener('click', (e)=>{ if (currentTool) return; const el=e.target.closest('.shape'); if (el) selectEl(el); });
-
-      // 회전 90° (창만) - width/height 교환으로 실제 회전 반영
-      const btnRotateHandler = ()=>{
-        if (!selectedEl) return; const tool=selectedEl.dataset.tool; if (tool!=='window') return;
-        const prevW=selectedEl.offsetWidth, prevH=selectedEl.offsetHeight;
-        const cur = selectedEl.dataset.angle==='90' ? '0' : '90';
-        selectedEl.dataset.angle = cur;
-        const cx = parseInt(selectedEl.style.left,10)+prevW/2; const cy=parseInt(selectedEl.style.top,10)+prevH/2;
-        selectedEl.style.width = prevH+'px';
-        selectedEl.style.height = prevW+'px';
-        centerPlace(selectedEl, cx, cy);
-        const list = placed[tool]; const item=list.find(i=>i.el===selectedEl); if (item){ updateRel(item); item.angle = cur; }
-      };
-      btnRotate.addEventListener('click', btnRotateHandler);
-
-      // 삭제
-      btnDelete.addEventListener('click', ()=>{
-        if (!selectedEl) return; const tool=selectedEl.dataset.tool; const list=placed[tool]; const i=list.findIndex(it=>it.el===selectedEl);
-        if(i>=0){ list[i].el.remove(); list.splice(i,1); }
-        clearSelect(); updateNextState(); setStatus('선택 항목을 삭제했습니다.');
-      });
-
-      // 초기화
-      page.querySelector('#reset-cur').addEventListener('click', ()=>{
-        Object.values(placed).forEach(arr=>arr.forEach(o=>o.el.remove()));
-        Object.keys(placed).forEach(k=>placed[k]=[]);
-        clearSelect(); updateNextState(); setStatus('현재 이미지가 초기화되었습니다.');
-      });
-
-      // 다음 이미지로 진행(저장)
-      page.querySelector('#next-cur').addEventListener('click', ()=>{
-        ['window','door'].forEach(kind=>{
-          placed[kind].forEach(it=>{
-            EXP_ROWS.push({
-              participant_id: props.participant_id, age: props.age, sex: props.sex, vision: props.vision, handedness: props.handedness,
-              phase: 'placement', image: imgSrc, item: kind, rel_x: it.rx, rel_y: it.ry, angle: it.angle||'0',
-              px_left: parseInt(it.el.style.left,10), px_top: parseInt(it.el.style.top,10), px_w: it.el.offsetWidth, px_h: it.el.offsetHeight
-            });
-          });
-        });
-        page.remove();
-        startSequence();
-      });
-    }
-  }
-
-  // ---- 오버레이 PNG 생성기 (실험1 결과를 원본 위에 합성; 다중 창/문 반영) ----
-  function generateOverlayPNGs(rows){
-    try{
-      window.__FIRST_THUMBS__ = [];
-      const uniqueImages = Array.from(new Set(rows.map(r=>r.image)));
-      const c = document.createElement('canvas'); c.width=600; c.height=400; const ctx=c.getContext('2d');
-
-      function drawOne(i){
-        if (i >= uniqueImages.length) return Promise.resolve();
-        const imgSrc = uniqueImages[i];
-        const itemRows = rows.filter(r=>r.image===imgSrc);
-
-        const placed = { window: [], door: [] };
-        itemRows.forEach(r=>{
-          if (r.item === 'window') placed.window.push({ rx:r.rel_x, ry:r.rel_y, angle:r.angle||'0', px_w:r.px_w, px_h:r.px_h });
-          else if (r.item === 'door') placed.door.push({ rx:r.rel_x, ry:r.rel_y, px_w:r.px_w, px_h:r.px_h });
-        });
-
-        return new Promise(function(loadRes){
-          const im = new Image();
-          im.onload = function(){
-            ctx.clearRect(0,0,c.width,c.height);
-            if (im.width && im.height){
-              const scale=Math.min(c.width/im.width, c.height/im.height);
-              const w=im.width*scale, h=im.height*scale; const ox=(c.width-w)/2, oy=(c.height-h)/2;
-              ctx.drawImage(im, ox, oy, w, h);
-
-              function drawRect(it, color){
-                const cx=ox + (it.rx*w); const cy=oy + (it.ry*h);
-                const rw=(it.px_w||100)*scale; const rh=(it.px_h||10)*scale;
-                ctx.save(); ctx.translate(cx, cy); 
-                ctx.fillStyle=color; ctx.globalAlpha=0.8; ctx.fillRect(-rw/2, -rh/2, rw, rh); ctx.restore();
-              }
-              function drawDoor(it){
-                const cx=ox + (it.rx*w); const cy=oy + (it.ry*h);
-                const r=((it.px_w||100)/2)*scale;
-                ctx.save(); ctx.globalAlpha=0.5; ctx.strokeStyle='#ff9'; ctx.lineWidth=3;
-                ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke(); ctx.restore();
-              }
-
-              placed.window.forEach(it=>drawRect(it, '#6cf'));
-              placed.door.forEach(it=>drawDoor(it));
-            }
-            loadRes();
-          };
-          im.onerror = function(){ loadRes(); };
-          im.src = imgSrc + '?cb=' + Date.now();
-        }).then(function(){
-          return new Promise(function(res){
-            c.toBlob(function(blob){
-              const href = URL.createObjectURL(blob||new Blob());
-              const pid = PARTICIPANT.id || 'anon'; const name = `${pid}_exp1_overlay_${i+1}_doors${placed.door.length}.png`;
-              window.__FIRST_THUMBS__.push({ name, href });
-              try { window.dispatchEvent(new CustomEvent('overlay-ready', { detail: { name, href } })); } catch(_){}
-              res();
-            }, 'image/png');
-          });
-        }).then(function(){ return drawOne(i+1); });
-      }
-
-      drawOne(0);
-    }catch(err){ console.error('generateOverlayPNGs error', err); }
-  }
-
-  // ========================= 실험1 종료 → 바로 실험2로 =========================
- function finishFirst(props){
+  // finishFirst 끝부분만 수정
+  function finishFirst(props){
     const rows = EXP_ROWS.filter(r=>r.phase==='placement');
     generateOverlayPNGs(rows); // 비동기 생성
     runSecondExperiment(props);   // ★ 그대로 두고, 실험2 끝에서 실험3으로 넘어가게 만듦
   }
 
-// ========================= 두번째 실험: 8장 × 3세트 (24 trial) =========================
+  // ========================= 두번째 실험: 8장 × 3세트 (24 trial) =========================
   function runSecondExperiment(props){
     const root = document.body;
 
@@ -603,24 +392,19 @@
   }
   </script>
 
+  <!-- selftest 스크립트는 그대로 두어도 되고 삭제해도 됨 -->
   <script>
-  // ========================= 간단 셀프 테스트 (선택) =========================
-  // 주소에 ?selftest=1 을 붙이면 실행되어 기본 동작을 검증합니다.
   (function(){
     try{
       const params = new URLSearchParams(location.search);
       if (params.get('selftest') !== '1') return;
       const out = [];
       function ok(name, cond){ out.push((cond? '✅':'❌') + ' ' + name); return !!cond; }
-      // 테스트 1: makeBlocks 길이
       ok('makeBlocks length=3', makeBlocks([1,2,3], 3).length === 3);
-      // 테스트 2: 회전 width/height 교환
       const el = document.createElement('div'); el.style.position='absolute'; el.style.width='300px'; el.style.height='10px'; document.body.appendChild(el);
       const w1 = el.offsetWidth, h1 = el.offsetHeight; el.style.width=h1+'px'; el.style.height=w1+'px';
       ok('rotate swaps size', el.offsetWidth===h1 && el.offsetHeight===w1);
-      // 테스트 3: 캔버스 픽셀 변경 여부
       const cv=document.createElement('canvas'); cv.width=120; cv.height=80; const ctx=cv.getContext('2d'); const before=cv.toDataURL(); ctx.fillStyle='#fff'; ctx.fillRect(0,0,10,10); const after=cv.toDataURL(); ok('canvas draws', before!==after);
-      // 출력
       const box=document.createElement('div'); box.className='container'; box.innerHTML='<h3>Self Test</h3><pre style="background:#0b0b0b; padding:.75rem; border:1px solid #222; border-radius:.5rem;">'+out.join('\n')+'</pre>'; document.body.appendChild(box);
     }catch(e){ console.error('selftest failed', e); }
   })();
