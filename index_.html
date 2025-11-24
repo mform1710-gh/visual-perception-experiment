@@ -215,7 +215,7 @@
               각 항목은 <strong>최대 3개</strong>까지 배치할 수 있습니다.
             </p>
             <div class="toolbar">
-              <button class="btn" data-tool="window">창 배치(200×10)</button>
+              <button class="btn" data-tool="window">창 배치(100×10)</button>
               <button class="btn" data-tool="door">문 배치(Ø100)</button>
             </div>
             <div class="toolbar">
@@ -255,7 +255,7 @@
       function placeAt(tool, evt){
         if (placed[tool].length >= 3) { setStatus(`${tool}는 최대 3개까지만 배치할 수 있습니다.`); return; }
         const p=relPos(evt); let el;
-        if (tool==='window') el=makeRect('window',200,10);
+        if (tool==='window') el=makeRect('window',100,10);
         else el=makeDoor();
         wrap.appendChild(el);
         centerPlace(el, p.x, p.y);
