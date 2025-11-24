@@ -573,10 +573,6 @@
         const url = URL.createObjectURL(blob);
 
 
-        document.body.appendChild(questionDiv);
-        document.getElementById('m_comment_next').addEventListener('click', ()=>{
-          props.comment = document.getElementById('m_comment').value.trim();
-          questionDiv.remove();
         
         const page3 = document.createElement('div'); page3.className = 'container';
         page3.innerHTML = `
