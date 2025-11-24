@@ -560,6 +560,7 @@
 
         // ★ 최종 CSV: 실험2+실험3 모두 포함
         const rows = EXP_ROWS.filter(r => r.phase === 'exp2' || r.phase === 'exp3');
+        if (props.comment) rows.forEach(r => r.comment = props.comment);
         const keySet = new Set();
         rows.forEach(r=>Object.keys(r).forEach(k=>keySet.add(k)));
 
@@ -568,6 +569,33 @@
         const csv = [headers.join(',')].concat(rows.map(r=>headers.map(h=>JSON.stringify(r[h] ?? '')).join(','))).join('\n');
         const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
+
+        // ---- CSV 저장 전, 추가 질문 페이지 ----
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'container';
+        questionDiv.innerHTML = `
+          <h2>추가 질문</h2>
+          <p>
+          크기가 작아도 개별 공간으로 분할하기도 하고, 크기가 상대적으로 커도
+          인접한 공간의 형상에 따라 개별공간으로 분할을 못하기도 하셨을 겁니다.<br><br>
+          <strong>공간을 분할하는 여부를 결정하는 기준이 무엇이었는지</strong>
+          자유롭게 서술해주세요.
+          </p>
+          <textarea id="m_comment" maxlength="50" rows="3" style="width:100%; font-size:1rem;"></textarea>
+          <div style="margin-top:1rem;">
+            <button id="m_comment_next" class="btn">다음 (제출)</button>
+          </div>
+        `;
+        document.body.appendChild(questionDiv);
+        document.getElementById('m_comment_next').addEventListener('click', ()=>{
+          props.comment = document.getElementById('m_comment').value.trim();
+          questionDiv.remove();
+        
+          // ---- (기존) CSV 및 이미지 전송 안내 페이지 시작 ----
+          const page3 = document.createElement('div'); 
+          page3.className = 'container';
+          ...
+        });
 
         const page3 = document.createElement('div'); page3.className = 'container';
         page3.innerHTML = `
