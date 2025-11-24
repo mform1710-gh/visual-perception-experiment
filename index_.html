@@ -560,9 +560,6 @@
 
         // ★ 최종 CSV: 실험2+실험3 모두 포함
         const rows = EXP_ROWS.filter(r => r.phase === 'exp2' || r.phase === 'exp3');
-
-        
-        // if (props.comment) rows.forEach(r => r.comment = props.comment);
         const keySet = new Set();
         rows.forEach(r=>Object.keys(r).forEach(k=>keySet.add(k)));
 
@@ -571,8 +568,6 @@
         const csv = [headers.join(',')].concat(rows.map(r=>headers.map(h=>JSON.stringify(r[h] ?? '')).join(','))).join('\n');
         const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
-
-
         
         const page3 = document.createElement('div'); page3.className = 'container';
         page3.innerHTML = `
