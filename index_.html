@@ -584,8 +584,7 @@
           <textarea id="m_comment" maxlength="50" rows="3" style="width:100%; font-size:1rem;"></textarea>
           <div style="margin-top:1rem;">
             <button id="m_comment_next" class="btn">다음 (제출)</button>
-          </div>
-        `;
+          </div>;
         document.body.appendChild(questionDiv);
         document.getElementById('m_comment_next').addEventListener('click', ()=>{
           props.comment = document.getElementById('m_comment').value.trim();
