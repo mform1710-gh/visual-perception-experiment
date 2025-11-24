@@ -83,7 +83,7 @@
   async function tryEnterFullscreen(){ if (!FULLSCREEN_PREFERRED) return false; try { const el=document.documentElement; if(el.requestFullscreen) await el.requestFullscreen(); else if(el.webkitRequestFullscreen) await el.webkitRequestFullscreen(); return true; } catch { return false; } }
 
   const EXP_ROWS = [];
-  const FIRST_STIM = ['TIMG/4.JPG','TIMG/7.JPG'];
+  const FIRST_STIM = ['T/4.jpg','T/7.jpg'];
 
   // ========================= 부팅 전 자가 점검 (이미지 경로) =========================
   async function selfCheck(){
