@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marie Kim | Research Portfolio</title>
+
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --fg: #222;
+      --accent: #3b5bcc;
+      --muted: #777;
+      --card-bg: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* 레이아웃 */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* 사이드바 */
+    .sidebar {
+      width: 320px;
+      padding: 32px 28px;
+      background: #101219;
+      color: #f7f7f7;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .profile-img {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      object-fit: cover;
+      filter: grayscale(100%);
+      transition: 0.3s;
+      border: 3px solid rgba(255,255,255,0.12);
+    }
+
+    .profile-img:hover {
+      filter: grayscale(0%);
+    }
+
+    .sidebar-name {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-role {
+      font-size: 0.95rem;
+      color: #c5c8d4;
+    }
+
+    .sidebar-section-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ea3ba;
+      margin-bottom: 6px;
+      margin-top: 10px;
+    }
+
+    .sidebar-links a {
+      display: block;
+      font-size: 0.9rem;
+      color: #dadff6;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-links a span {
+      color: #a2a9d8;
+    }
+
+    .sidebar-small {
+      font-size: 0.8rem;
+      color: #9ea3ba;
+    }
+
+    /* 메인 컨텐츠 영역 */
+    .main {
+      flex: 1;
+      padding: 32px 32px 48px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .main section {
+      margin-bottom: 40px;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 6px;
+      margin-bottom: 16px;
+    }
+
+    .tagline {
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .pill {
+      display: inline-block;
+      background: #e0e4ff;
+      color: #22295b;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 0.8rem;
+      margin: 2px 6px 2px 0;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .card-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .card-meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .card-keywords {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    ul.clean {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    ul.clean li {
+      margin-bottom: 10px;
+    }
+
+    .year-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      color: #555;
+    }
+
+    /* 반응형 */
+    @media (max-width: 800px) {
+      .layout {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+        padding: 20px 16px;
+      }
+      .sidebar-main {
+        flex: 1;
+      }
+      .main {
+        padding: 20px 18px 32px;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .sidebar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- LEFT: SIDEBAR -->
+  <aside class="sidebar">
+    <div>
+      <img src="your_profile.jpg" alt="Profile" class="profile-img">
+    </div>
+    <div class="sidebar-main">
+      <div class="sidebar-name">Marie Kim</div>
+      <div class="sidebar-role">Architect · Housing Researcher · Computational Designer</div>
+
+      <div class="sidebar-section-title">Contact</div>
+      <div class="sidebar-links">
+        <a href="mailto:mform1710@gmail.com"><span>Email</span> · mform1710@gmail.com</a>
+        <a href="https://github.com/yourname" target="_blank"><span>GitHub</span> · github.com/yourname</a>
+        <a href="https://orcid.org/0000-0001-8883-2116" target="_blank"><span>ORCID</span> · 0000-0001-8883-2116</a>
+        <a href="https://https://scholar.google.com/citations?user=Oog4AY4AAAAJ&hl=ko&authuser=1" target="_blank"><span>Google Scholar</span></a>
+      </div>
+
+      <div class="sidebar-section-title">Keywords</div>
+      <div class="sidebar-small">
+        Housing tenure systems · Inequality · Spatial perception · Unity & jsPsych
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT: MAIN CONTENT -->
+  <main class="main">
+
+    <!-- RESEARCH FOCUS -->
+    <section id="research">
+      <div class="section-title">Research Focus</div>
+      <p class="tagline">
+        I study how housing tenure structures and spatial configurations shape inequality,
+        mobility, and everyday perception of space.
+      </p>
+      <p>
+        My work combines <strong>architectural design</strong>, <strong>housing policy analysis</strong>, and
+        <strong>computational experiments</strong> using tools such as Unity and jsPsych.
+        I am particularly interested in:
+      </p>
+      <ul>
+        <li>Comparative analysis of urban housing tenures and asset polarization</li>
+        <li>Design of semi-public / semi-private zones and their social effects</li>
+        <li>Visual perception experiments on depth, motion parallax, and spatial comfort</li>
+      </ul>
+
+      <div style="margin-top:10px;">
+        <span class="pill">Housing Tenure</span>
+        <span class="pill">Inequality</span>
+        <span class="pill">Spatial Perception</span>
+        <span class="pill">Unity / jsPsych</span>
+      </div>
+    </section>
+
+    <!-- SELECTED PROJECTS -->
+    <section id="projects">
+      <div class="section-title">Selected Projects</div>
+
+      <div class="card">
+        <div class="card-title">Comparative Housing Tenure Typologies</div>
+        <div class="card-meta">2023–2025 · Statistical modeling, QCA, clustering</div>
+        <p>
+          Built a cross-national dataset of urban housing tenures (Vienna, Seoul, London, Tokyo, etc.)
+          and analyzed structural indicators such as initial housing cost, long-term cost, security & rights,
+          and mobility support to examine their impact on asset inequality.
+        </p>
+        <div class="card-keywords">
+          Methods: QCA, correlation analysis, clustering · Tools: Python, Excel
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Depth Perception & Motion Parallax Experiments</div>
+        <div class="card-meta">2024– · Online jsPsych + Unity-based experiments</div>
+        <p>
+          Designed online visual perception tasks using jsPsych and Unity to test how perspective patterns,
+          parallax motion, and colour/brightness contrast contribute to illusory depth in 2D images.
+        </p>
+        <div class="card-keywords">
+          Methods: online experiments, response time, accuracy · Tools: jsPsych, JavaScript, Unity
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Semi-public Space & Everyday Democracy in Housing</div>
+        <div class="card-meta">In progress · Theoretical + case study</div>
+        <p>
+          Investigating how semi-public zones in social housing (lounges, shared corridors, thresholds)
+          reflect and reproduce social structures, using Vienna and Korean housing estates as main cases.
+        </p>
+        <div class="card-keywords">
+          Methods: spatial analysis, literature review · Tools: AutoCAD, QGIS
+        </div>
+      </div>
+    </section>
+
+    <!-- SELECTED PUBLICATIONS (또는 Working Papers) -->
+    <section id="publications">
+      <div class="section-title">Selected Publications & Working Papers</div>
+
+      <div class="year-label">Working Papers</div>
+      <ul class="clean">
+        <li>
+          <strong>Which housing tenures mitigate regional asset polarization?</strong><br>
+          M. Kim · Manuscript in preparation, 2025.<br>
+          <span class="card-meta">
+            Comparative study of 9 housing tenures using 5 structural indicators and cluster analysis.
+          </span>
+        </li>
+      </ul>
+
+      <div class="year-label">Selected Writing / Reports</div>
+      <ul class="clean">
+        <li>
+          <strong>Spatial Narratives of Semi-Public Housing Zones</strong><br>
+          Internal research report, 2024.
+        </li>
+        <li>
+          <strong>Design for Disassembly in Urban Housing Retrofits</strong><br>
+          Concept notes exploring DFMA & DfD approaches to aging apartment estates.
+        </li>
+      </ul>
+    </section>
+
+    <!-- TALKS / TEACHING -->
+    <section id="talks">
+      <div class="section-title">Talks & Teaching</div>
+
+      <ul class="clean">
+        <li>
+          <strong>Housing Tenure as an Inequality Engine</strong><br>
+          Guest lecture, graduate housing seminar, 2024.<br>
+          <span class="card-meta">Topic: cross-national housing systems, tenure structures, and wealth distribution.</span>
+        </li>
+        <li>
+          <strong>Unity & jsPsych for Spatial Perception Experiments</strong><br>
+          Internal workshop, 2023.
+        </li>
+      </ul>
+    </section>
+
+    <!-- MISC -->
+    <section id="misc">
+      <div class="section-title">Ongoing / Side Notes</div>
+      <p>
+        Currently exploring:
+      </p>
+      <ul>
+        <li>Branch-based cluster housing layouts and semi-public lounges</li>
+        <li>Simple tax and housing models to simulate long-term tenure outcomes</li>
+        <li>Visual experiments on illusory depth with layered translucent foliage</li>
+      </ul>
+    </section>
+
+  </main>
+</div>
+
+</body>
+</html>
